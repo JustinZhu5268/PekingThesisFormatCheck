@@ -131,7 +131,7 @@ class SafeAnnotator:
         
         # 方法1：优先尝试独立段落标注
         try:
-            self._annotate_independent_paragraph(target_para, issues)
+            self._annotate_independent_paragraph(target_para, issues, para_index)
             self.annotation_log.append(f"段落 {para_index}: 使用独立段落标注")
             return
         except Exception as e:
@@ -139,7 +139,7 @@ class SafeAnnotator:
         
         # 方法2：降级为段落末尾追加
         try:
-            self._annotate_inline_suffix(target_para, issues)
+            self._annotate_inline_suffix(target_para, issues, para_index)
             self.annotation_log.append(f"段落 {para_index}: 使用末尾追加标注")
             return
         except Exception as e:
@@ -149,7 +149,7 @@ class SafeAnnotator:
         self.annotation_log.append(f"段落 {para_index}: 标注失败，仅记录报告")
         self.failed_count += 1
     
-    def _annotate_independent_paragraph(self, para: Paragraph, issues: List[Any]):
+    def _annotate_independent_paragraph(self, para: Paragraph, issues: List[Any], para_index: int):
         """
         方法1：使用内联标注 + 高亮（不再插入新段落，避免文档过大）
         
@@ -158,8 +158,8 @@ class SafeAnnotator:
         # 1. 对违规段落做黄色高亮
         self._highlight_paragraph(para)
         
-        # 2. 构建简洁的标注文本
-        annotation_text = self._build_annotation_text(issues)
+        # 2. 构建简洁的标注文本（包含段落位置预览）
+        annotation_text = self._build_annotation_text(issues, para_index, para.text)
         
         # 3. 在段落末尾添加内联标注（不再插入新段落）
         # 使用换行符分隔
@@ -170,7 +170,7 @@ class SafeAnnotator:
         run.font.bold = self.ANNOTATION_FONT_BOLD
         run.font.size = self.ANNOTATION_FONT_SIZE
     
-    def _annotate_inline_suffix(self, para: Paragraph, issues: List[Any]):
+    def _annotate_inline_suffix(self, para: Paragraph, issues: List[Any], para_index: int):
         """
         方法2：在段落末尾追加 Run（降级方案）
         
@@ -179,8 +179,10 @@ class SafeAnnotator:
         # 1. 对段落做黄色高亮
         self._highlight_paragraph(para)
         
-        # 2. 构建标注文本
-        combined = ' | '.join(
+        # 2. 构建标注文本（包含段落位置预览）
+        preview = self._get_paragraph_preview(para.text)
+        combined = f"[段落 {para_index}] {preview} | "
+        combined += ' | '.join(
             f'[{getattr(i, "rule_id", "?")}]{getattr(i, "message", "")[:30]}'
             for i in issues
         )
@@ -231,9 +233,40 @@ class SafeAnnotator:
         
         return new_para
     
-    def _build_annotation_text(self, issues: List[Any]) -> str:
-        """构建简洁的标注文本"""
-        lines = ["【系统审查建议】"]
+    def _get_paragraph_preview(self, para_text: str) -> str:
+        """
+        获取段落开头6个字符作为预览
+        
+        Args:
+            para_text: 段落文本
+            
+        Returns:
+            段落开头6个字符（用引号包裹），如果不足6字则显示实际长度
+        """
+        # 去除首尾空白
+        text = para_text.strip()
+        if not text:
+            return '""'
+        
+        # 取前6个字符
+        preview = text[:6]
+        
+        # 用引号包裹返回
+        return f'"{preview}"'
+    
+    def _build_annotation_text(self, issues: List[Any], para_index: int, para_text: str = "") -> str:
+        """
+        构建简洁的标注文本（包含段落位置预览）
+        
+        Args:
+            issues: 问题列表
+            para_index: 段落索引
+            para_text: 段落文本（用于预览）
+        """
+        # 获取段落预览
+        preview = self._get_paragraph_preview(para_text) if para_text else '""'
+        
+        lines = [f"【系统审查建议 - 段落 {para_index} {preview}】"]
         
         for idx, issue in enumerate(issues, 1):
             rule_id = getattr(issue, 'rule_id', '?')
@@ -364,6 +397,17 @@ def generate_report(input_path: str, issues: List[Any],
         message = getattr(issue, 'message', '')
         location = getattr(issue, 'location', None)
         para_idx = location.get('paragraph_index', 'N/A') if location else 'N/A'
+        
+        # 获取段落预览（显示前6个字）
+        para_preview = 'N/A'
+        if location and para_idx != 'N/A':
+            try:
+                para_idx_int = int(para_idx)
+                if para_idx_int < len(issues):  # 用 issue 列表长度近似段落数
+                    # 尝试从 doc 中获取段落文本
+                    pass
+            except (ValueError, TypeError):
+                pass
         
         lines.append(f"[#{idx}] 规则 {rule_id} | 严重程度: {severity} | 段落: {para_idx}")
         lines.append(f"     {message}")
