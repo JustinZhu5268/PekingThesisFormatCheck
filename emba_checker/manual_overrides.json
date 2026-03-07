@@ -1,0 +1,1400 @@
+[
+  {
+    "rule_id": "HEADER_01",
+    "check_type": "global_property",
+    "conditions": {
+      "property": "header_exists",
+      "expected": true,
+      "zones": [
+        "abstract_cn",
+        "abstract_en",
+        "toc",
+        "body_chapter",
+        "references",
+        "appendix",
+        "acknowledgment"
+      ]
+    },
+    "_comment": "页眉存在性检查，在指定区域必须存在页眉"
+  },
+  {
+    "rule_id": "HEADER_03",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "北京大学硕士学位论文",
+      "match_mode": "must_match",
+      "scope": "header"
+    },
+    "_comment": "页眉奇偶页内容检查，偶数页应为北京大学硕士学位论文"
+  },
+  {
+    "rule_id": "HEADER_04",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "border_bottom": true,
+      "border_width_pt": 0.75
+    },
+    "_comment": "页眉下划线 0.75 磅"
+  },
+  {
+    "rule_id": "HEADER_06",
+    "check_type": "global_property",
+    "conditions": {
+      "property": "footer_position",
+      "expected": "center"
+    },
+    "_comment": "页脚位置：中部"
+  },
+  {
+    "rule_id": "HEADER_07",
+    "check_type": "global_property",
+    "conditions": {
+      "property": "first_page_number",
+      "expected": false,
+      "zones": [
+        "cover",
+        "copyright",
+        "declaration"
+      ]
+    },
+    "_comment": "封面/版权声明/原创声明不要页码"
+  },
+  {
+    "rule_id": "HEADER_08",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]",
+      "match_mode": "must_match",
+      "scope": "page_number",
+      "zones": [
+        "abstract_cn",
+        "abstract_en",
+        "toc"
+      ]
+    },
+    "_comment": "摘要至目录部分使用罗马数字页码"
+  },
+  {
+    "rule_id": "HEADER_09",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[1-9]+\\.?\\d*",
+      "match_mode": "must_match",
+      "scope": "page_number",
+      "zones": [
+        "body_chapter",
+        "references",
+        "appendix"
+      ]
+    },
+    "_comment": "正文部分使用阿拉伯数字页码"
+  },
+  {
+    "rule_id": "PUNCT_03",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[,.;:!?]",
+      "match_mode": "must_not_match",
+      "scope": "full_text",
+      "exception_zones": [
+        "abstract_en",
+        "references"
+      ]
+    },
+    "_comment": "英文摘要必须使用英文标点，在 abstract_en 区域不能有中文标点"
+  },
+  {
+    "rule_id": "PUNCT_04",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[，。；：？！]",
+      "match_mode": "must_not_match",
+      "scope": "full_text",
+      "zones": [
+        "references"
+      ]
+    },
+    "_comment": "参考文献必须使用英文标点"
+  },
+  {
+    "rule_id": "PUNCT_05",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[，。；：？！]",
+      "match_mode": "must_not_match",
+      "scope": "full_text",
+      "zones": [
+        "body_chapter"
+      ]
+    },
+    "_comment": "数字/公式部分使用英文标点（需人工辅助判断上下文）"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_03",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "chinese_chars",
+      "min_value": 500,
+      "max_value": 700,
+      "zones": [
+        "abstract_cn"
+      ]
+    },
+    "_comment": "中文摘要字数 600 字左右（±100）"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_04",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "paragraphs",
+      "min_value": 2,
+      "zones": [
+        "abstract_cn"
+      ]
+    },
+    "_comment": "摘要至少分 2 段"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_14",
+    "check_type": "ai_semantic",
+    "conditions": {
+      "prompt_template": "请检查以下中英文摘要中相同术语的翻译是否一致。\n中文摘要：{abstract_cn}\n英文摘要：{abstract_en}\n请以JSON格式回答：{format_spec}",
+      "format_spec": {
+        "consistent": true,
+        "inconsistent_terms": [],
+        "suggestion": ""
+      },
+      "batch_mode": "by_zone"
+    },
+    "_comment": "翻译一致性检查，需 Claude 语义理解"
+  },
+  {
+    "rule_id": "TOC_06",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "toc_levels",
+      "max_value": 1
+    },
+    "_comment": "EMBA 目录一般只展示到一级节标题"
+  },
+  {
+    "rule_id": "TOC_07",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\{[^}]*PAGE[^}]*\\}",
+      "match_mode": "must_match",
+      "scope": "toc"
+    },
+    "_comment": "目录页码必须为自动生成（域代码）"
+  },
+  {
+    "rule_id": "TOC_08",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "toc_lines",
+      "min_value": 10,
+      "max_value": 50
+    },
+    "_comment": "目录行数检查（10-50行）"
+  },
+  {
+    "rule_id": "TOC_11",
+    "check_type": "text_match",
+    "conditions": {
+      "expected_text": "",
+      "match_mode": "not_contains",
+      "zones": [
+        "toc"
+      ]
+    },
+    "_comment": "图表目录一般不需要"
+  },
+  {
+    "rule_id": "HEADING_05",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [
+        "可能的创新点",
+        "可能的贡献",
+        "也许",
+        "或许",
+        "可能"
+      ],
+      "match_mode": "not_contains",
+      "zones": [
+        "body_chapter"
+      ]
+    },
+    "_comment": "标题自信要求，禁止不自信表述"
+  },
+  {
+    "rule_id": "BODY_01",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "chinese_chars",
+      "min_value": 20000,
+      "zones": [
+        "body_chapter"
+      ]
+    },
+    "_comment": "正文字数 2 万字以上"
+  },
+  {
+    "rule_id": "MISC_17",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "图表清晰度 - 需图像识别，无法自动检测"
+  },
+  {
+    "rule_id": "MISC_19",
+    "check_type": "global_property",
+    "conditions": {
+      "property": "table_is_native",
+      "expected": true
+    },
+    "_comment": "表格必须为 Word 原生表格，禁止截图"
+  },
+  {
+    "rule_id": "MISC_22",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "blank_pages_near_figure",
+      "max_value": 0
+    },
+    "_comment": "图表前后不要留大片空白"
+  },
+  {
+    "rule_id": "TEXT_NORM_01",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "title_char_count",
+      "max_value": 20,
+      "zones": [
+        "cover"
+      ]
+    },
+    "_comment": "论文题目不超过 20 个汉字"
+  },
+  {
+    "rule_id": "TEXT_NORM_02",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [
+        "新时代背景下",
+        "后疫情时代"
+      ],
+      "match_mode": "not_contains"
+    },
+    "_comment": "禁止空洞词汇"
+  },
+  {
+    "rule_id": "TEXT_NORM_03",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [],
+      "word_list_file": "company_names.txt",
+      "match_mode": "not_contains",
+      "zones": [
+        "cover"
+      ]
+    },
+    "_comment": "主标题不出现公司名（需建立公司名库）"
+  },
+  {
+    "rule_id": "TEXT_NORM_04",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [
+        "我",
+        "我们",
+        "咱们"
+      ],
+      "match_mode": "not_contains",
+      "exception_zones": [
+        "acknowledgment"
+      ]
+    },
+    "_comment": "禁止第一人称（除致谢外）"
+  },
+  {
+    "rule_id": "TEXT_NORM_06",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "word_list_file": "colloquial_words.txt",
+      "match_mode": "not_contains"
+    },
+    "_comment": "避免口语化表达"
+  },
+  {
+    "rule_id": "TEXT_NORM_07",
+    "check_type": "ai_semantic",
+    "conditions": {
+      "prompt_template": "请检查以下文本中外国公司名称的翻译是否统一。\n文本：{text}\n请以JSON格式回答：{format_spec}",
+      "format_spec": {
+        "consistent": true,
+        "inconsistent_terms": [],
+        "suggestion": ""
+      },
+      "batch_mode": "by_zone"
+    },
+    "_comment": "公司名称统一性检查，需语义理解"
+  },
+  {
+    "rule_id": "TEXT_NORM_09",
+    "check_type": "ai_semantic",
+    "conditions": {
+      "prompt_template": "请检查以下文本是否有病句或错别字。\n文本：{text}\n请以JSON格式回答：{format_spec}",
+      "format_spec": {
+        "has_errors": false,
+        "errors": [],
+        "suggestion": ""
+      },
+      "batch_mode": "by_paragraph"
+    },
+    "_comment": "病句错字检查，需语义理解"
+  },
+  {
+    "rule_id": "APPENDIX_01",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "style_name_contains": "标题",
+      "font_name_cn": "黑体",
+      "font_size_pt": 16
+    },
+    "_comment": "附录标题同论文章标题格式"
+  },
+  {
+    "rule_id": "ACK_01",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "style_name_contains": "标题",
+      "font_name_cn": "黑体",
+      "font_size_pt": 16
+    },
+    "_comment": "致谢标题同论文章标题格式"
+  },
+  {
+    "rule_id": "CASE_WRITE_01",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "(20[12][0-9]|19[89][0-9])",
+      "match_mode": "find_all",
+      "scope": "full_text"
+    },
+    "_comment": "数据年份检查，引用最新数据"
+  },
+  {
+    "rule_id": "CASE_WRITE_02",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "(资料来源|数据来源|来源：|来自)",
+      "match_mode": "must_match",
+      "scope": "full_text"
+    },
+    "_comment": "数据来源标注检查"
+  },
+  {
+    "rule_id": "LIT_REVIEW_01",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "references",
+      "min_value": 5,
+      "max_value": 50
+    },
+    "_comment": "文献综述引用数量检查"
+  },
+  {
+    "rule_id": "CONCLUSION_01",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "(研究不足|局限性|不足之处)",
+      "match_mode": "must_match",
+      "scope": "last_chapter"
+    },
+    "_comment": "结论需包含研究不足"
+  },
+  {
+    "rule_id": "CONCLUSION_02",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "figures_in_conclusion",
+      "expected": 0
+    },
+    "_comment": "结论中不应有图表"
+  },
+  {
+    "rule_id": "CONCLUSION_04",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 26,
+      "bold": true,
+      "alignment": "CENTER"
+    },
+    "_comment": "封面主标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_06",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 16,
+      "alignment": "CENTER"
+    },
+    "_comment": "章标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_07",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 14,
+      "alignment": "LEFT"
+    },
+    "_comment": "一级节标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_08",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 13,
+      "alignment": "LEFT"
+    },
+    "_comment": "二级节标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_09",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 12,
+      "alignment": "LEFT"
+    },
+    "_comment": "三级节标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_10",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_size_pt": 12,
+      "first_line_indent_char": 2
+    },
+    "_comment": "正文段落格式"
+  },
+  {
+    "rule_id": "CONCLUSION_11",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 16,
+      "alignment": "CENTER"
+    },
+    "_comment": "摘要标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_12",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 16,
+      "alignment": "CENTER"
+    },
+    "_comment": "参考文献标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_13",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_size_pt": 11,
+      "alignment": "CENTER"
+    },
+    "_comment": "图表题注格式"
+  },
+  {
+    "rule_id": "MISC_25",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\([\\u4e00-\\u9fa5]+,\\s*\\d{4}\\)",
+      "match_mode": "find_all",
+      "scope": "body_text"
+    },
+    "_comment": "已提姓名只著录出版年"
+  },
+  {
+    "rule_id": "MISC_26",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\([A-Z][a-z]+,\\s*\\d{4}\\)",
+      "match_mode": "find_all",
+      "scope": "body_text"
+    },
+    "_comment": "英文文献正文引用只写姓"
+  },
+  {
+    "rule_id": "MISC_29",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "references",
+      "min_value": 15,
+      "zones": [
+        "references"
+      ]
+    },
+    "_comment": "参考文献 15 篇以上"
+  },
+  {
+    "rule_id": "MISC_35",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[，。；：？！]",
+      "match_mode": "must_not_match",
+      "scope": "full_text",
+      "zones": [
+        "references"
+      ]
+    },
+    "_comment": "参考文献标点为英文格式"
+  },
+  {
+    "rule_id": "MISC_37",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "reference_sorting",
+      "sorted": true
+    },
+    "_comment": "参考文献排序检查"
+  },
+  {
+    "rule_id": "MISC_40",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\([A-Z]{2,3}\\)",
+      "match_mode": "must_not_match",
+      "scope": "references"
+    },
+    "_comment": "不写国别"
+  },
+  {
+    "rule_id": "MISC_42",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^[^(]+",
+      "match_mode": "must_match",
+      "scope": "first_element"
+    },
+    "_comment": "多出版地只著录第1个"
+  },
+  {
+    "rule_id": "MISC_43",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "unique_references",
+      "expected": "same"
+    },
+    "_comment": "参考文献不能重复"
+  },
+  {
+    "rule_id": "MISC_46",
+    "check_type": "cross_reference",
+    "conditions": {
+      "caption_pattern": "",
+      "reference_pattern": "",
+      "error_on": "both"
+    },
+    "_comment": "文中引用与文末参考文献一一对应"
+  },
+  {
+    "rule_id": "MISC_47",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "recent_years_ratio",
+      "min_ratio": 0.5
+    },
+    "_comment": "引用文献年份检查"
+  },
+  {
+    "rule_id": "PUNCT_06",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [
+        "！",
+        "？",
+        "；；",
+        "……",
+        "：："
+      ],
+      "match_mode": "not_contains",
+      "zones": [
+        "body_chapter"
+      ]
+    },
+    "_comment": "标点滥用 - 禁止连续使用感叹号、问号、分号、省略号"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_10",
+    "check_type": "ai_semantic",
+    "conditions": {
+      "prompt_template": "请检查英文摘要是否包含以下组成部分：英文题目、作者姓名、专业名称、导师姓名、ABSTRACT、摘要内容、关键词。\n文本：{text}\n请以JSON格式回答：{format_spec}",
+      "format_spec": {
+        "has_all_parts": true,
+        "missing_parts": [],
+        "suggestion": ""
+      },
+      "batch_mode": "by_zone"
+    },
+    "_comment": "英文摘要组成检查"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_13",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^[A-Z][a-z]+",
+      "match_mode": "must_match",
+      "zones": [
+        "abstract_en"
+      ]
+    },
+    "_comment": "英文关键词首字母大写"
+  },
+  {
+    "rule_id": "TOC_02",
+    "check_type": "ai_semantic",
+    "conditions": {
+      "prompt_template": "请检查目录是否包含：章节序号、标题名称和页码。\n文本：{text}\n请以JSON格式回答：{format_spec}",
+      "format_spec": {
+        "has_all_parts": true,
+        "missing_parts": []
+      },
+      "batch_mode": "by_zone"
+    },
+    "_comment": "目录内容组成"
+  },
+  {
+    "rule_id": "TOC_05",
+    "check_type": "regex_match",
+    "target_zone": [
+      "toc"
+    ],
+    "conditions": {
+      "pattern": "^\\s+",
+      "match_mode": "must_match",
+      "_comment": "目录缩进检测"
+    }
+  },
+  {
+    "rule_id": "TOC_09",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [
+        "，",
+        "。",
+        "；",
+        "：",
+        "！",
+        "？"
+      ],
+      "match_mode": "not_contains",
+      "zones": [
+        "toc"
+      ]
+    },
+    "_comment": "目录标题中一般不能有标点"
+  },
+  {
+    "rule_id": "TOC_10",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "toc_title_length",
+      "max_value": 30
+    },
+    "_comment": "目录标题长度检查"
+  },
+  {
+    "rule_id": "MISC_48",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^[A-Z][a-z]+,\\s*\\d{4}\\.\\s*.+\\.\\s*[A-Z]{2}:\\s*.+",
+      "match_mode": "must_match",
+      "scope": "references"
+    },
+    "_comment": "专著格式检查：著者, 出版年. 题名. 出版地: 出版者"
+  },
+  {
+    "rule_id": "MISC_49",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^[A-Z][a-z]+,\\s*\\d{4}\\.\\s*.+,\\s*.+,\\s*\\d+\\(\\d+\\):\\s*\\d+",
+      "match_mode": "must_match",
+      "scope": "references"
+    },
+    "_comment": "期刊格式检查：著者, 出版年. 析出文献题名. 期刊名, 卷(期): 页码"
+  },
+  {
+    "rule_id": "MISC_51",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\[引用日期\\]\\.\\s*.+\\.\\s*获取和访问路径",
+      "match_mode": "must_match",
+      "scope": "references"
+    },
+    "_comment": "电子文献格式检查"
+  },
+  {
+    "rule_id": "TEXT_NORM_11",
+    "check_type": "ai_semantic",
+    "conditions": {
+      "prompt_template": "请检查以下文本中首次出现的专有名词是否提供了中英文全称解释。\n文本：{text}\n请以JSON格式回答：{format_spec}",
+      "format_spec": {
+        "has_abbreviations": true,
+        "unexplained_terms": [],
+        "suggestion": ""
+      },
+      "batch_mode": "by_paragraph"
+    },
+    "_comment": "专有名词首次出现需解释"
+  },
+  {
+    "rule_id": "TEXT_NORM_12",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\d+\\.?\\d*%?",
+      "match_mode": "find_all",
+      "scope": "full_text"
+    },
+    "_comment": "孤立数字检查"
+  },
+  {
+    "rule_id": "COVER_02",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_size_pt": 16,
+      "alignment": "CENTER"
+    },
+    "_comment": "题目排版"
+  },
+  {
+    "rule_id": "PAGE_03",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "脚注格式检查 - 需人工判断"
+  },
+  {
+    "rule_id": "PAGE_04",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "脚注编号格式 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_03",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "position": "below_figure"
+    },
+    "_comment": "图题位置"
+  },
+  {
+    "rule_id": "MISC_04",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "图中标注文字 - 需视觉检查"
+  },
+  {
+    "rule_id": "MISC_07",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "图表附注 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_11",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "position": "above_table"
+    },
+    "_comment": "表题位置"
+  },
+  {
+    "rule_id": "MISC_21",
+    "check_type": "skip",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {},
+    "_comment": "表格跨页检测需要复杂XML处理，暂跳过"
+  },
+  {
+    "rule_id": "EXPR_05",
+    "check_type": "regex_match",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {
+      "pattern": "\\*",
+      "match_mode": "must_not_match",
+      "_comment": "使用×而非*"
+    }
+  },
+  {
+    "rule_id": "FOOT_01",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "脚注内容 - 需人工判断"
+  },
+  {
+    "rule_id": "FOOT_02",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "脚注格式 - 需人工判断"
+  },
+  {
+    "rule_id": "FOOT_06",
+    "check_type": "skip",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {},
+    "_comment": "脚注编号格式需要XML处理，暂跳过"
+  },
+  {
+    "rule_id": "MISC_24",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "引用格式一致性 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_33",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "外文人名翻译 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_34",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "外文地名翻译 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_36",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "缩写首次出现 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_50",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "网络文献检查 - 需人工判断"
+  },
+  {
+    "rule_id": "APPENDIX_03",
+    "check_type": "paragraph_style",
+    "target_zone": [
+      "appendix"
+    ],
+    "conditions": {
+      "space_after_pt": 0,
+      "_comment": "附录序号与标题之间空1汉字符"
+    }
+  },
+  {
+    "rule_id": "TEXT_NORM_08",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "统计显著性 - 需人工判断"
+  },
+  {
+    "rule_id": "TEXT_NORM_13",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "研究伦理 - 需人工判断"
+  },
+  {
+    "rule_id": "CONCLUSION_05",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "研究局限表述 - 需人工判断"
+  },
+  {
+    "rule_id": "COVER_01",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[^——]+——.+",
+      "match_mode": "must_match",
+      "scope": "cover"
+    },
+    "_comment": "主副标题用破折号隔开"
+  },
+  {
+    "rule_id": "COVER_05",
+    "check_type": "text_match",
+    "conditions": {
+      "expected_text": "北京大学光华管理学院",
+      "match_mode": "contains",
+      "zones": [
+        "cover"
+      ]
+    },
+    "_comment": "必须包含学校名称"
+  },
+  {
+    "rule_id": "PUNCT_01",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[，。；：？！]",
+      "match_mode": "must_not_match",
+      "zones": [
+        "abstract_cn"
+      ]
+    },
+    "_comment": "中文摘要不出现中文标点（英文摘要才用英文标点）"
+  },
+  {
+    "rule_id": "PUNCT_02",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[，。；：？！]",
+      "match_mode": "must_not_match",
+      "zones": [
+        "body_chapter"
+      ]
+    },
+    "_comment": "中文正文不出现中文标点"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_05",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "关键词[：:].+",
+      "match_mode": "must_match",
+      "zones": [
+        "abstract_cn"
+      ]
+    },
+    "_comment": "中文摘要必须有关键词"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_08",
+    "check_type": "text_match",
+    "conditions": {
+      "expected_text": "关键词",
+      "match_mode": "contains",
+      "zones": [
+        "abstract_cn"
+      ]
+    },
+    "_comment": "中文摘要有关键词"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_09",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^[A-Z][a-z]+.*;.*[A-Z][a-z]+",
+      "match_mode": "must_match",
+      "zones": [
+        "abstract_en"
+      ]
+    },
+    "_comment": "英文关键词格式"
+  },
+  {
+    "rule_id": "HEADING_01",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^第[一二三四五六七八九十百千]+[章节部分]",
+      "match_mode": "must_match",
+      "zones": [
+        "body_chapter"
+      ]
+    },
+    "_comment": "章标题格式"
+  },
+  {
+    "rule_id": "HEADING_02",
+    "check_type": "paragraph_style",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {
+      "font_size_pt": 14,
+      "bold": true,
+      "alignment": "LEFT",
+      "line_spacing_type": "MULTIPLE",
+      "line_spacing_value": 1.5,
+      "space_before_pt": 24,
+      "space_after_pt": 6,
+      "_comment": "二级标题: 黑体四号居左, 1.5倍行距, 段前24磅段后6磅"
+    }
+  },
+  {
+    "rule_id": "BODY_04",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [
+        "百度百科",
+        "360百科",
+        "维基百科"
+      ],
+      "match_mode": "not_contains",
+      "zones": [
+        "body_chapter",
+        "references"
+      ]
+    },
+    "_comment": "禁止网络百科引用"
+  },
+  {
+    "rule_id": "BODY_06",
+    "check_type": "regex_match",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {
+      "pattern": "[√●▶▲▼◆■★☆]",
+      "match_mode": "must_not_match",
+      "_comment": "禁止PPT符号"
+    }
+  },
+  {
+    "rule_id": "MISC_01",
+    "check_type": "regex_match",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {
+      "pattern": "图\\s*\\d+\\.\\d+",
+      "match_mode": "must_match",
+      "_comment": "图编号: 2.1 格式"
+    }
+  },
+  {
+    "rule_id": "MISC_05",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "图表引用 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_08",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "表格续表 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_09",
+    "check_type": "regex_match",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {
+      "pattern": "表\\s*\\d+\\.\\d+",
+      "match_mode": "must_match",
+      "_comment": "表编号: 2.1 格式"
+    }
+  },
+  {
+    "rule_id": "MISC_13",
+    "check_type": "regex_match",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {
+      "pattern": "单位[：:]",
+      "match_mode": "must_match",
+      "_comment": "表中标明量和单位"
+    }
+  },
+  {
+    "rule_id": "MISC_14",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "变量统一性 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_20",
+    "check_type": "regex_match",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {
+      "pattern": "\\d+\\.\\d+",
+      "match_mode": "find_all_violations",
+      "_comment": "表中数字统一小数位(简化版)"
+    }
+  },
+  {
+    "rule_id": "EXPR_01",
+    "check_type": "regex_match",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {
+      "pattern": "式\\s*\\(\\d+\\.\\d+\\)",
+      "match_mode": "must_match",
+      "_comment": "公式编号: 式(2.1)"
+    }
+  },
+  {
+    "rule_id": "EXPR_06",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "变量斜体 - 需人工判断"
+  },
+  {
+    "rule_id": "FOOT_07",
+    "check_type": "regex_match",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {
+      "pattern": "https?://|www\\.",
+      "match_mode": "find_all_violations",
+      "_comment": "网址应在脚注标注(简化版)"
+    }
+  },
+  {
+    "rule_id": "MISC_23",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "引用标注位置 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_27",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "多作者格式 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_28",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "期刊缩写 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_38",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "文献完整性 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_44",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "英美拼写 - 需人工判断"
+  },
+  {
+    "rule_id": "APPENDIX_02",
+    "check_type": "regex_match",
+    "target_zone": [
+      "appendix"
+    ],
+    "conditions": {
+      "pattern": "附录\\s*[A-Z]",
+      "match_mode": "must_match",
+      "_comment": "附录编号: 附录A"
+    }
+  },
+  {
+    "rule_id": "APPENDIX_04",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "附录编号 - 需人工判断"
+  },
+  {
+    "rule_id": "TEXT_NORM_10",
+    "check_type": "regex_match",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {
+      "pattern": "(XX|某某)\\s*公司",
+      "match_mode": "must_not_match",
+      "_comment": "禁止XX公司"
+    }
+  },
+  {
+    "rule_id": "COVER_06",
+    "check_type": "text_match",
+    "conditions": {
+      "expected_text": "( 学术学位    ☑ 专业学位 )",
+      "match_mode": "contains"
+    },
+    "_comment": "学位类型标识"
+  },
+  {
+    "rule_id": "DECL_01",
+    "check_type": "text_match",
+    "target_zone": [
+      "declaration"
+    ],
+    "conditions": {
+      "expected_text": "收存",
+      "match_mode": "contains"
+    },
+    "_comment": "版权声明包含关键词"
+  },
+  {
+    "rule_id": "DECL_02",
+    "check_type": "text_match",
+    "target_zone": [
+      "declaration"
+    ],
+    "conditions": {
+      "expected_text": "原创性",
+      "match_mode": "contains"
+    },
+    "_comment": "原创性声明包含关键词"
+  },
+  {
+    "rule_id": "DECL_03",
+    "check_type": "text_match",
+    "target_zone": [
+      "declaration"
+    ],
+    "conditions": {
+      "expected_text": "授权",
+      "match_mode": "contains"
+    },
+    "_comment": "授权说明包含关键词"
+  },
+  {
+    "rule_id": "DECL_04",
+    "check_type": "text_match",
+    "target_zone": [
+      "declaration"
+    ],
+    "conditions": {
+      "expected_text": "承诺书",
+      "match_mode": "contains"
+    },
+    "_comment": "承诺书包含关键词"
+  },
+  {
+    "rule_id": "MISC_06",
+    "check_type": "text_match",
+    "conditions": {
+      "expected_text": "图",
+      "match_mode": "contains"
+    },
+    "_comment": "图中文字"
+  },
+  {
+    "rule_id": "MISC_16",
+    "check_type": "text_match",
+    "conditions": {
+      "expected_text": "续表",
+      "match_mode": "contains"
+    },
+    "_comment": "续表标识"
+  },
+  {
+    "rule_id": "MISC_32",
+    "check_type": "skip",
+    "conditions": {},
+    "_comment": "英美拼写 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_39",
+    "check_type": "text_match",
+    "conditions": {
+      "expected_text": "见",
+      "match_mode": "contains"
+    },
+    "_comment": "文献引用格式"
+  },
+  {
+    "rule_id": "MISC_41",
+    "check_type": "text_match",
+    "conditions": {
+      "expected_text": "出版地",
+      "match_mode": "contains"
+    },
+    "_comment": "出版地"
+  },
+  {
+    "rule_id": "MISC_45",
+    "check_type": "text_match",
+    "conditions": {
+      "expected_text": "et al",
+      "match_mode": "contains"
+    },
+    "_comment": "多作者格式"
+  },
+  {
+    "rule_id": "EXPR_03",
+    "check_type": "paragraph_style",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {
+      "line_spacing_type": "MULTIPLE",
+      "line_spacing_value": 1.0,
+      "space_before_pt": 6,
+      "space_after_pt": 6,
+      "_comment": "公式行距: 单倍, 段前段后6磅"
+    }
+  },
+  {
+    "rule_id": "EXPR_04",
+    "check_type": "paragraph_style",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {
+      "line_spacing_type": "MULTIPLE",
+      "line_spacing_value": 1.0,
+      "space_before_pt": 3,
+      "space_after_pt": 3,
+      "_comment": "公式段落: 单倍行距, 段前段后3磅"
+    }
+  },
+  {
+    "rule_id": "FOOT_05",
+    "check_type": "paragraph_style",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "conditions": {
+      "line_spacing_type": "MULTIPLE",
+      "line_spacing_value": 1.0,
+      "space_before_pt": 0,
+      "space_after_pt": 0,
+      "_comment": "脚注: 单倍行距，段前段后0磅"
+    }
+  },
+  {
+    "rule_id": "BODY_05",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "references_in_chapter",
+      "min_value": 1
+    },
+    "_comment": "每章引用数量"
+  },
+  {
+    "rule_id": "TEXT_NORM_05",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [
+        "他妈",
+        "傻逼",
+        "混蛋"
+      ],
+      "match_mode": "not_contains"
+    },
+    "_comment": "禁止粗俗语言"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_06A",
+    "check_type": "regex_match",
+    "target_zone": ["abstract_cn"],
+    "conditions": {
+      "pattern": "；",
+      "match_mode": "must_not_match",
+      "scope": "full_text"
+    },
+    "error_message": "【重要】关键词分隔符错误：必须使用中文逗号'，'分隔，不能使用分号'；'！\n当前检测到：关键词使用了分号分隔，请改为中文逗号",
+    "_comment": "检测中文摘要关键词是否使用正确的分隔符（逗号而非分号）"
+  }
+]

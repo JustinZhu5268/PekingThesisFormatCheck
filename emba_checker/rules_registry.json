@@ -1,0 +1,4096 @@
+[
+  {
+    "rule_id": "COVER_01",
+    "md_source": "一、封面页格式",
+    "md_source_key": "一、封面页格式::论文题目（主标题）",
+    "element_name": "论文题目（主标题）",
+    "format_requirement": "黑体，一号，加粗，居中对齐；不超过20个汉字；主副标题用破折号\"——\"隔开",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "must_match",
+      "pattern": "[^——]+——.+",
+      "scope": "cover"
+    },
+    "detection_method": "Word XML解析字体属性、字符数统计、正则匹配破折号\"——\"",
+    "error_message": "论文题目（主标题）格式不符：黑体，一号，加粗，居中对齐；不超过20个汉字；主副标题用破折号\"——\"隔开",
+    "enabled": true,
+    "_comment": "主副标题用破折号隔开"
+  },
+  {
+    "rule_id": "COVER_02",
+    "md_source": "一、封面页格式",
+    "md_source_key": "一、封面页格式::题目排版",
+    "element_name": "题目排版",
+    "format_requirement": "不建议在最后一行留1/2个字，可把文本框拉长一点，把字显示在同一行",
+    "automation_level": "semi",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_size_pt": 16,
+      "alignment": "CENTER"
+    },
+    "detection_method": "需人工检查末行是否只有半个字",
+    "error_message": "题目排版格式不符：不建议在最后一行留1/2个字，可把文本框拉长一点，把字显示在同一行",
+    "enabled": true,
+    "_comment": "题目排版"
+  },
+  {
+    "rule_id": "COVER_03",
+    "md_source": "一、封面页格式",
+    "md_source_key": "一、封面页格式::姓名至导师栏",
+    "element_name": "姓名至导师栏",
+    "format_requirement": "仿宋，三号，居中；含姓名、学号、院系、专业、研究方向、导师",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "仿宋",
+      "font_size_pt": 16,
+      "alignment": "CENTER"
+    },
+    "detection_method": "字体检测、段落对齐检测",
+    "error_message": "姓名至导师栏格式不符：仿宋，三号，居中；含姓名、学号、院系、专业、研究方向、导师",
+    "enabled": true
+  },
+  {
+    "rule_id": "COVER_04",
+    "md_source": "一、封面页格式",
+    "md_source_key": "一、封面页格式::研究方向",
+    "element_name": "研究方向",
+    "format_requirement": "最多8个汉字/个，最多两个，用\"；\"分隔；**必须从27个指定列表选择**（如人力资源管理、产业经济、战略管理、创新、创业、大数据、企业管理、公司治理、供应链管理、企业文化、企业社会责任、财务管理、广告、促销、劳动经济、审计、资本市场、组织行为、谈判、投资学、运营管理、商务统计、商业模式、企业经济学、商业经济学、管理经济学、决策）",
+    "automation_level": "semi",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "chinese_chars"
+    },
+    "detection_method": "字符数、分隔符可编程；是否在27个指定列表中需词库匹配",
+    "error_message": "研究方向格式不符：最多8个汉字/个，最多两个，用\"；\"分隔；**必须从27个指定列表选择**（如人力资源管理、产业经济、战略管理、创新、创业、大数据、企业管理、公司治理、供应链管",
+    "enabled": true
+  },
+  {
+    "rule_id": "COVER_05",
+    "md_source": "一、封面页格式",
+    "md_source_key": "一、封面页格式::日期",
+    "element_name": "日期",
+    "format_requirement": "宋体，三号，居中；格式\"二〇二六年三月\"（中文数字，〇为中文圆圈）；同一学期毕业的日期统一，请勿修改",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python",
+    "check_type": "text_match",
+    "conditions": {
+      "match_mode": "contains",
+      "expected_text": "北京大学光华管理学院",
+      "zones": [
+        "cover"
+      ]
+    },
+    "detection_method": "正则匹配`[一二三四五六七八九〇]{4}年[一二三四五六七八九十]{1,2}月`",
+    "error_message": "日期格式不符：宋体，三号，居中；格式\"二〇二六年三月\"（中文数字，〇为中文圆圈）；同一学期毕业的日期统一，请勿修改",
+    "enabled": true,
+    "_comment": "必须包含学校名称"
+  },
+  {
+    "rule_id": "COVER_06",
+    "md_source": "一、封面页格式",
+    "md_source_key": "一、封面页格式::学位类型标识",
+    "element_name": "学位类型标识",
+    "format_requirement": "底部标注\"( 学术学位    ☑ 专业学位 )\"",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python",
+    "check_type": "text_match",
+    "conditions": {
+      "match_mode": "contains",
+      "expected_text": "( 学术学位    ☑ 专业学位 )"
+    },
+    "detection_method": "文本匹配或勾选框状态检测",
+    "error_message": "学位类型标识格式不符：底部标注\"( 学术学位    ☑ 专业学位 )\"",
+    "enabled": true,
+    "_comment": "学位类型标识"
+  },
+  {
+    "rule_id": "DECL_01",
+    "md_source": "二、版权声明 / 原创性声明 / 授权说明 / 承诺书",
+    "md_source_key": "二、版权声明 / 原创性声明 / 授权说明 / 承诺书::版权声明",
+    "element_name": "版权声明",
+    "format_requirement": "**固定格式，请勿做任何修改**；位于封面后，无页码",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "declaration"
+    ],
+    "engine": "Python",
+    "check_type": "text_match",
+    "conditions": {
+      "match_mode": "contains",
+      "expected_text": "收存"
+    },
+    "detection_method": "文本精确匹配（与模板文本一字不差）",
+    "error_message": "版权声明格式不符：**固定格式，请勿做任何修改**；位于封面后，无页码",
+    "enabled": true,
+    "_comment": "版权声明包含关键词"
+  },
+  {
+    "rule_id": "DECL_02",
+    "md_source": "二、版权声明 / 原创性声明 / 授权说明 / 承诺书",
+    "md_source_key": "二、版权声明 / 原创性声明 / 授权说明 / 承诺书::原创性声明",
+    "element_name": "原创性声明",
+    "format_requirement": "**固定格式，从学校系统下载**；包含论文作者签名和日期",
+    "automation_level": "semi",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "declaration"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "text_match",
+    "conditions": {
+      "match_mode": "contains",
+      "expected_text": "原创性"
+    },
+    "detection_method": "文本匹配模板内容；签名和日期需人工确认",
+    "error_message": "原创性声明格式不符：**固定格式，从学校系统下载**；包含论文作者签名和日期",
+    "enabled": true,
+    "_comment": "原创性声明包含关键词"
+  },
+  {
+    "rule_id": "DECL_03",
+    "md_source": "二、版权声明 / 原创性声明 / 授权说明 / 承诺书",
+    "md_source_key": "二、版权声明 / 原创性声明 / 授权说明 / 承诺书::学位论文使用授权说明",
+    "element_name": "学位论文使用授权说明",
+    "format_requirement": "**固定格式，从学校系统下载**；必须装订在提交学校图书馆的印刷本中；含延迟发布选项（一年/两年/三年）；含论文作者签名、导师签名和日期",
+    "automation_level": "semi",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "declaration"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "text_match",
+    "conditions": {
+      "match_mode": "contains",
+      "expected_text": "授权"
+    },
+    "detection_method": "文本匹配模板内容；签名需人工确认",
+    "error_message": "学位论文使用授权说明格式不符：**固定格式，从学校系统下载**；必须装订在提交学校图书馆的印刷本中；含延迟发布选项（一年/两年/三年）；含论文作者签名、导师签名和日期",
+    "enabled": true,
+    "_comment": "授权说明包含关键词"
+  },
+  {
+    "rule_id": "DECL_04",
+    "md_source": "二、版权声明 / 原创性声明 / 授权说明 / 承诺书",
+    "md_source_key": "二、版权声明 / 原创性声明 / 授权说明 / 承诺书::提交终版学位论文承诺书",
+    "element_name": "提交终版学位论文承诺书",
+    "format_requirement": "**固定格式，从学校系统中下载**；包含论文作者签名和日期",
+    "automation_level": "semi",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "declaration"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "text_match",
+    "conditions": {
+      "match_mode": "contains",
+      "expected_text": "承诺书"
+    },
+    "detection_method": "文本匹配模板内容；签名需人工确认",
+    "error_message": "提交终版学位论文承诺书格式不符：**固定格式，从学校系统中下载**；包含论文作者签名和日期",
+    "enabled": true,
+    "_comment": "承诺书包含关键词"
+  },
+  {
+    "rule_id": "PAGE_01",
+    "md_source": "三、页面设置（全局适用）",
+    "md_source_key": "三、页面设置（全局适用）::纸张",
+    "element_name": "纸张",
+    "format_requirement": "标准A4尺寸（210×297mm）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group1_Global",
+    "target_zone": [
+      "cover",
+      "abstract_cn",
+      "abstract_en",
+      "toc",
+      "body_chapter",
+      "references",
+      "appendix",
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "global_property",
+    "conditions": {
+      "page_width_cm": 21.0,
+      "page_height_cm": 29.7
+    },
+    "detection_method": "Word文档属性读取",
+    "error_message": "纸张格式不符：标准A4尺寸（210×297mm）",
+    "enabled": true
+  },
+  {
+    "rule_id": "PAGE_02",
+    "md_source": "三、页面设置（全局适用）",
+    "md_source_key": "三、页面设置（全局适用）::页边距",
+    "element_name": "页边距",
+    "format_requirement": "上3.0cm、下2.5cm、左2.6cm、右2.6cm、装订线0cm；对称，装订线位置左",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group1_Global",
+    "target_zone": [
+      "cover",
+      "abstract_cn",
+      "abstract_en",
+      "toc",
+      "body_chapter",
+      "references",
+      "appendix",
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "global_property",
+    "conditions": {
+      "top_margin_cm": 3.0,
+      "bottom_margin_cm": 2.5,
+      "left_margin_cm": 2.6,
+      "right_margin_cm": 2.6
+    },
+    "detection_method": "Word Section属性读取（以磅值或厘米值精确比对）",
+    "error_message": "页边距格式不符：上3.0cm、下2.5cm、左2.6cm、右2.6cm、装订线0cm；对称，装订线位置左",
+    "enabled": true
+  },
+  {
+    "rule_id": "PAGE_03",
+    "md_source": "三、页面设置（全局适用）",
+    "md_source_key": "三、页面设置（全局适用）::页眉距边界",
+    "element_name": "页眉距边界",
+    "format_requirement": "2.0cm",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group1_Global",
+    "target_zone": [
+      "cover",
+      "abstract_cn",
+      "abstract_en",
+      "toc",
+      "body_chapter",
+      "references",
+      "appendix",
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "Word PageSetup属性读取",
+    "error_message": "页眉距边界格式不符：2.0cm",
+    "enabled": true,
+    "_comment": "脚注格式检查 - 需人工判断"
+  },
+  {
+    "rule_id": "PAGE_04",
+    "md_source": "三、页面设置（全局适用）",
+    "md_source_key": "三、页面设置（全局适用）::页脚距边界",
+    "element_name": "页脚距边界",
+    "format_requirement": "1.75cm",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group1_Global",
+    "target_zone": [
+      "cover",
+      "abstract_cn",
+      "abstract_en",
+      "toc",
+      "body_chapter",
+      "references",
+      "appendix",
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "Word PageSetup属性读取",
+    "error_message": "页脚距边界格式不符：1.75cm",
+    "enabled": true,
+    "_comment": "脚注编号格式 - 需人工判断"
+  },
+  {
+    "rule_id": "HEADER_01",
+    "md_source": "四、页眉页码设置",
+    "md_source_key": "四、页眉页码设置::页眉起始范围",
+    "element_name": "页眉起始范围",
+    "format_requirement": "从\"摘要\"开始到最后一页，每一页均须有页眉",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group1_HeaderFooter",
+    "target_zone": [
+      "cover",
+      "abstract_cn",
+      "abstract_en",
+      "toc",
+      "body_chapter",
+      "references",
+      "appendix",
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "global_property",
+    "conditions": {
+      "property": "header_exists",
+      "expected": true,
+      "zones": [
+        "abstract_cn",
+        "abstract_en",
+        "toc",
+        "body_chapter",
+        "references",
+        "appendix",
+        "acknowledgment"
+      ]
+    },
+    "detection_method": "分节符检测、页眉存在性检测",
+    "error_message": "页眉起始范围格式不符：从\"摘要\"开始到最后一页，每一页均须有页眉",
+    "enabled": true,
+    "_comment": "页眉存在性检查，在指定区域必须存在页眉"
+  },
+  {
+    "rule_id": "HEADER_02",
+    "md_source": "四、页眉页码设置",
+    "md_source_key": "四、页眉页码设置::页眉字体",
+    "element_name": "页眉字体",
+    "format_requirement": "宋体，五号，居中",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group1_HeaderFooter",
+    "target_zone": [
+      "cover",
+      "abstract_cn",
+      "abstract_en",
+      "toc",
+      "body_chapter",
+      "references",
+      "appendix",
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_size_pt": 10.5,
+      "alignment": "CENTER"
+    },
+    "detection_method": "字体属性检测（Header属性）",
+    "error_message": "页眉字体格式不符：宋体，五号，居中",
+    "enabled": true
+  },
+  {
+    "rule_id": "HEADER_03",
+    "md_source": "四、页眉页码设置",
+    "md_source_key": "四、页眉页码设置::页眉内容（奇偶页不同）",
+    "element_name": "页眉内容（奇偶页不同）",
+    "format_requirement": "奇数页为相应内容名称/正文中相应各章的名称，偶数页为\"北京大学硕士学位论文\"",
+    "automation_level": "semi",
+    "urgency": "★★★★★",
+    "target_group": "Group1_HeaderFooter",
+    "target_zone": [
+      "cover",
+      "abstract_cn",
+      "abstract_en",
+      "toc",
+      "body_chapter",
+      "references",
+      "appendix",
+      "acknowledgment"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "北京大学硕士学位论文",
+      "match_mode": "must_match",
+      "scope": "header"
+    },
+    "detection_method": "奇偶页不同设置可检测；内容正确性需人工核对",
+    "error_message": "页眉内容（奇偶页不同）格式不符：奇数页为相应内容名称/正文中相应各章的名称，偶数页为\"北京大学硕士学位论文\"",
+    "enabled": true,
+    "_comment": "页眉奇偶页内容检查，偶数页应为北京大学硕士学位论文"
+  },
+  {
+    "rule_id": "HEADER_04",
+    "md_source": "四、页眉页码设置",
+    "md_source_key": "四、页眉页码设置::页眉下划线",
+    "element_name": "页眉下划线",
+    "format_requirement": "文字下划0.75磅横线，线长与页面齐宽",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group1_HeaderFooter",
+    "target_zone": [
+      "cover",
+      "abstract_cn",
+      "abstract_en",
+      "toc",
+      "body_chapter",
+      "references",
+      "appendix",
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "border_bottom": true,
+      "border_width_pt": 0.75
+    },
+    "detection_method": "边框线属性检测（粗细、宽度）",
+    "error_message": "页眉下划线格式不符：文字下划0.75磅横线，线长与页面齐宽",
+    "enabled": true,
+    "_comment": "页眉下划线 0.75 磅"
+  },
+  {
+    "rule_id": "HEADER_05",
+    "md_source": "四、页眉页码设置",
+    "md_source_key": "四、页眉页码设置::页码字体",
+    "element_name": "页码字体",
+    "format_requirement": "Times New Roman，五号，数字两侧无修饰线",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group1_HeaderFooter",
+    "target_zone": [
+      "cover",
+      "abstract_cn",
+      "abstract_en",
+      "toc",
+      "body_chapter",
+      "references",
+      "appendix",
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_en": "Times New Roman",
+      "font_size_pt": 10.5
+    },
+    "detection_method": "页码字段字体属性检测",
+    "error_message": "页码字体格式不符：Times New Roman，五号，数字两侧无修饰线",
+    "enabled": true
+  },
+  {
+    "rule_id": "HEADER_06",
+    "md_source": "四、页眉页码设置",
+    "md_source_key": "四、页眉页码设置::页码位置",
+    "element_name": "页码位置",
+    "format_requirement": "页脚中部",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group1_HeaderFooter",
+    "target_zone": [
+      "cover",
+      "abstract_cn",
+      "abstract_en",
+      "toc",
+      "body_chapter",
+      "references",
+      "appendix",
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "global_property",
+    "conditions": {
+      "property": "footer_position",
+      "expected": "center"
+    },
+    "detection_method": "段落对齐属性检测",
+    "error_message": "页码位置格式不符：页脚中部",
+    "enabled": true,
+    "_comment": "页脚位置：中部"
+  },
+  {
+    "rule_id": "HEADER_07",
+    "md_source": "四、页眉页码设置",
+    "md_source_key": "四、页眉页码设置::封面/版权声明/原创声明",
+    "element_name": "封面/版权声明/原创声明",
+    "format_requirement": "不要页码",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group1_HeaderFooter",
+    "target_zone": [
+      "cover",
+      "abstract_cn",
+      "abstract_en",
+      "toc",
+      "body_chapter",
+      "references",
+      "appendix",
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "global_property",
+    "conditions": {
+      "property": "first_page_number",
+      "expected": false,
+      "zones": [
+        "cover",
+        "copyright",
+        "declaration"
+      ]
+    },
+    "detection_method": "分节符检测、首页不同设置检测",
+    "error_message": "封面/版权声明/原创声明格式不符：不要页码",
+    "enabled": true,
+    "_comment": "封面/版权声明/原创声明不要页码"
+  },
+  {
+    "rule_id": "HEADER_08",
+    "md_source": "四、页眉页码设置",
+    "md_source_key": "四、页眉页码设置::摘要至目录部分",
+    "element_name": "摘要至目录部分",
+    "format_requirement": "罗马数字\"Ⅰ、Ⅱ、Ⅲ……\"",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group1_HeaderFooter",
+    "target_zone": [
+      "cover",
+      "abstract_cn",
+      "abstract_en",
+      "toc",
+      "body_chapter",
+      "references",
+      "appendix",
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]",
+      "match_mode": "must_match",
+      "scope": "page_number",
+      "zones": [
+        "abstract_cn",
+        "abstract_en",
+        "toc"
+      ]
+    },
+    "detection_method": "页码格式字段检测",
+    "error_message": "摘要至目录部分格式不符：罗马数字\"Ⅰ、Ⅱ、Ⅲ……\"",
+    "enabled": true,
+    "_comment": "摘要至目录部分使用罗马数字页码"
+  },
+  {
+    "rule_id": "HEADER_09",
+    "md_source": "四、页眉页码设置",
+    "md_source_key": "四、页眉页码设置::正文部分",
+    "element_name": "正文部分",
+    "format_requirement": "从\"第一章\"开始阿拉伯数字\"1、2、3……\"",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group1_HeaderFooter",
+    "target_zone": [
+      "cover",
+      "abstract_cn",
+      "abstract_en",
+      "toc",
+      "body_chapter",
+      "references",
+      "appendix",
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[1-9]+\\.?\\d*",
+      "match_mode": "must_match",
+      "scope": "page_number",
+      "zones": [
+        "body_chapter",
+        "references",
+        "appendix"
+      ]
+    },
+    "detection_method": "页码格式字段检测、分节符位置检测",
+    "error_message": "正文部分格式不符：从\"第一章\"开始阿拉伯数字\"1、2、3……\"",
+    "enabled": true,
+    "_comment": "正文部分使用阿拉伯数字页码"
+  },
+  {
+    "rule_id": "PUNCT_01",
+    "md_source": "五、标点符号规范",
+    "md_source_key": "五、标点符号规范::中文内容",
+    "element_name": "中文内容",
+    "format_requirement": "必须使用中文格式标点（，。；：\"\"《》？！（）——等）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn",
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "must_not_match",
+      "pattern": "[，。；：？！]",
+      "zones": [
+        "abstract_cn"
+      ]
+    },
+    "detection_method": "Unicode标点范围检测（U+3000系列）",
+    "error_message": "中文内容格式不符：必须使用中文格式标点（，。；：\"\"《》？！（）——等）",
+    "enabled": true,
+    "_comment": "中文摘要不出现中文标点（英文摘要才用英文标点）"
+  },
+  {
+    "rule_id": "PUNCT_02",
+    "md_source": "五、标点符号规范",
+    "md_source_key": "五、标点符号规范::中英文标点对照",
+    "element_name": "中英文标点对照",
+    "format_requirement": "逗号(，vs,)、句号(。vs.)、分号(；vs;)、冒号(：vs:)、引号(\"\"vs\"\")、书名号(《》vs<>)、问号(？vs?)、叹号(！vs!)、括号(（）vs())、破折号(——vs-)",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn",
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "must_not_match",
+      "pattern": "[，。；：？！]",
+      "zones": [
+        "body_chapter"
+      ]
+    },
+    "detection_method": "Unicode范围对照检测",
+    "error_message": "中英文标点对照格式不符：逗号(，vs,)、句号(。vs.)、分号(；vs;)、冒号(：vs:)、引号(\"\"vs\"\")、书名号(《》vs<>)、问号(？vs?)、叹号(！vs!)、括号(",
+    "enabled": true,
+    "_comment": "中文正文不出现中文标点"
+  },
+  {
+    "rule_id": "PUNCT_03",
+    "md_source": "五、标点符号规范",
+    "md_source_key": "五、标点符号规范::英文摘要",
+    "element_name": "英文摘要",
+    "format_requirement": "必须使用英文格式标点",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn",
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[,.;:!?]",
+      "match_mode": "must_not_match",
+      "scope": "full_text",
+      "exception_zones": [
+        "abstract_en",
+        "references"
+      ]
+    },
+    "detection_method": "ASCII标点检测",
+    "error_message": "英文摘要格式不符：必须使用英文格式标点",
+    "enabled": true,
+    "_comment": "英文摘要必须使用英文标点，在 abstract_en 区域不能有中文标点"
+  },
+  {
+    "rule_id": "PUNCT_04",
+    "md_source": "五、标点符号规范",
+    "md_source_key": "五、标点符号规范::参考文献",
+    "element_name": "参考文献",
+    "format_requirement": "英文格式标点",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "abstract_cn",
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[，。；：？！]",
+      "match_mode": "must_not_match",
+      "scope": "full_text",
+      "zones": [
+        "references"
+      ]
+    },
+    "detection_method": "ASCII标点检测",
+    "error_message": "参考文献格式不符：英文格式标点",
+    "enabled": true,
+    "_comment": "参考文献必须使用英文标点"
+  },
+  {
+    "rule_id": "PUNCT_05",
+    "md_source": "五、标点符号规范",
+    "md_source_key": "五、标点符号规范::数字/公式部分",
+    "element_name": "数字/公式部分",
+    "format_requirement": "使用英文标点",
+    "automation_level": "semi",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn",
+      "body_chapter"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[，。；：？！]",
+      "match_mode": "must_not_match",
+      "scope": "full_text",
+      "zones": [
+        "body_chapter"
+      ]
+    },
+    "detection_method": "上下文识别需人工辅助，纯文本检测易误判",
+    "error_message": "数字/公式部分格式不符：使用英文标点",
+    "enabled": true,
+    "_comment": "数字/公式部分使用英文标点（需人工辅助判断上下文）"
+  },
+  {
+    "rule_id": "PUNCT_06",
+    "md_source": "五、标点符号规范",
+    "md_source_key": "五、标点符号规范::标点滥用",
+    "element_name": "标点滥用",
+    "format_requirement": "禁止滥用感叹号、问号、分号、省略号、冒号",
+    "automation_level": "semi",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn",
+      "body_chapter"
+    ],
+    "engine": "Python+Claude",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [
+        "！",
+        "？",
+        "；；",
+        "……",
+        "：："
+      ],
+      "match_mode": "not_contains",
+      "zones": [
+        "body_chapter"
+      ]
+    },
+    "detection_method": "标点频率统计可编程；是否\"滥用\"需人工判断语境",
+    "error_message": "标点滥用格式不符：禁止滥用感叹号、问号、分号、省略号、冒号",
+    "enabled": true,
+    "_comment": "标点滥用 - 禁止连续使用感叹号、问号、分号、省略号"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_01",
+    "md_source": "六、摘要格式",
+    "md_source_key": "六、摘要格式::\"摘要\"二字",
+    "element_name": "\"摘要\"二字",
+    "format_requirement": "黑体，三号，居中，单倍行距，段前24磅，段后18磅",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 16,
+      "alignment": "CENTER",
+      "space_before_pt": 24,
+      "space_after_pt": 18
+    },
+    "detection_method": "段落样式属性全量检测",
+    "error_message": "\"摘要\"二字格式不符：黑体，三号，居中，单倍行距，段前24磅，段后18磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "ABSTRACT_CN_02",
+    "md_source": "六、摘要格式",
+    "md_source_key": "六、摘要格式::中文摘要正文",
+    "element_name": "中文摘要正文",
+    "format_requirement": "宋体，小四号，两端对齐，首行空2汉字符，20磅行距，段前0磅，段后0磅",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_size_pt": 14,
+      "alignment": "JUSTIFY",
+      "space_before_pt": 0,
+      "space_after_pt": 0
+    },
+    "detection_method": "字体、段落缩进（0.74cm/2字符）、行距检测",
+    "error_message": "中文摘要正文格式不符：宋体，小四号，两端对齐，首行空2汉字符，20磅行距，段前0磅，段后0磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "ABSTRACT_CN_03",
+    "md_source": "六、摘要格式",
+    "md_source_key": "六、摘要格式::字数控制",
+    "element_name": "字数控制",
+    "format_requirement": "600字左右（±100字），2/3页左右；**禁止出现图表**",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "chinese_chars",
+      "min_value": 500,
+      "max_value": 700,
+      "zones": [
+        "abstract_cn"
+      ]
+    },
+    "detection_method": "纯文本字符统计（不含标点/含标点分别统计）、图片锚点检测",
+    "error_message": "字数控制格式不符：600字左右（±100字），2/3页左右；**禁止出现图表**",
+    "enabled": true,
+    "_comment": "中文摘要字数 600 字左右（±100）"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_04",
+    "md_source": "六、摘要格式",
+    "md_source_key": "六、摘要格式::分段要求",
+    "element_name": "分段要求",
+    "format_requirement": "起码分2段，说清楚研究的背景、问题、总结等",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "paragraphs",
+      "min_value": 2,
+      "zones": [
+        "abstract_cn"
+      ]
+    },
+    "detection_method": "段落计数（回车符统计）",
+    "error_message": "分段要求格式不符：起码分2段，说清楚研究的背景、问题、总结等",
+    "enabled": true,
+    "_comment": "摘要至少分 2 段"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_05",
+    "md_source": "六、摘要格式",
+    "md_source_key": "六、摘要格式::禁止章写法",
+    "element_name": "禁止章写法",
+    "format_requirement": "禁止\"第一章……；第二章……\"写法（摘要中）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "must_match",
+      "pattern": "关键词[：:].+",
+      "zones": [
+        "abstract_cn"
+      ]
+    },
+    "detection_method": "正则匹配`第[一二三四五六七八九十]+章`（在摘要区域）",
+    "error_message": "禁止章写法格式不符：禁止\"第一章……；第二章……\"写法（摘要中）",
+    "enabled": true,
+    "_comment": "中文摘要必须有关键词"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_06",
+    "md_source": "六、摘要格式",
+    "md_source_key": "六、摘要格式::中文关键词",
+    "element_name": "中文关键词",
+    "format_requirement": "3-5个，本页最下方另起一行，中文逗号\"，\"分隔；宋体小四，两端对齐，首行空2字符，行距20磅，段前段后0磅",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_size_pt": 12,
+      "alignment": "JUSTIFY",
+      "line_spacing_type": "EXACTLY",
+      "line_spacing_value_pt": 20,
+      "first_line_indent_char": 2.0,
+      "space_after_pt": 0
+    },
+    "detection_method": "关键词数量统计、分隔符检测（\"，\"）、位置检测（是否在本页底部）",
+    "error_message": "中文关键词格式不符：3-5个，本页最下方另起一行，中文逗号\"，\"分隔；宋体小四，两端对齐，首行空2字符，行距20磅，段前段后0磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "ABSTRACT_CN_07",
+    "md_source": "七、英文摘要格式",
+    "md_source_key": "七、英文摘要格式::英文题目",
+    "element_name": "英文题目",
+    "format_requirement": "Arial，三号，居中，单倍行距，段前24磅，段后18磅",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_en": "Arial",
+      "font_size_pt": 16,
+      "alignment": "CENTER",
+      "space_before_pt": 24,
+      "space_after_pt": 18
+    },
+    "detection_method": "字体家族检测（Arial）",
+    "error_message": "英文题目格式不符：Arial，三号，居中，单倍行距，段前24磅，段后18磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "ABSTRACT_CN_08",
+    "md_source": "七、英文摘要格式",
+    "md_source_key": "七、英文摘要格式::作者和导师英文名",
+    "element_name": "作者和导师英文名",
+    "format_requirement": "Times New Roman，小四号，居中，20磅行距，段前段后0磅；汉语拼音姓和名中间空一格（Zhang San）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python",
+    "check_type": "text_match",
+    "conditions": {
+      "match_mode": "contains",
+      "expected_text": "关键词",
+      "zones": [
+        "abstract_cn"
+      ]
+    },
+    "detection_method": "正则匹配拼音格式`[A-Z][a-z]+\\s[A-Z][a-z]+`",
+    "error_message": "作者和导师英文名格式不符：Times New Roman，小四号，居中，20磅行距，段前段后0磅；汉语拼音姓和名中间空一格（Zhang San）",
+    "enabled": true,
+    "_comment": "中文摘要有关键词"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_09",
+    "md_source": "七、英文摘要格式",
+    "md_source_key": "七、英文摘要格式::英文名特殊规则",
+    "element_name": "英文名特殊规则",
+    "format_requirement": "复姓连写（如Ouyang Wen）、双姓用\"-\"连接（如Chen-Fang Yumei）、Lǚ（吕音）可用Lyu、少数民族按民族语音译",
+    "automation_level": "semi",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "must_match",
+      "pattern": "^[A-Z][a-z]+.*;.*[A-Z][a-z]+",
+      "zones": [
+        "abstract_en"
+      ]
+    },
+    "detection_method": "正则可检测基本格式；特殊情况需人工确认",
+    "error_message": "英文名特殊规则格式不符：复姓连写（如Ouyang Wen）、双姓用\"-\"连接（如Chen-Fang Yumei）、Lǚ（吕音）可用Lyu、少数民族按民族语音译",
+    "enabled": true,
+    "_comment": "英文关键词格式"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_10",
+    "md_source": "七、英文摘要格式",
+    "md_source_key": "七、英文摘要格式::英文摘要组成",
+    "element_name": "英文摘要组成",
+    "format_requirement": "由上到下应包含英文题目、作者姓名、专业名称（括号括起放姓名之后）、导师姓名、\"ABSTRACT\"、英文摘要内容和关键词（KEY WORDS）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python",
+    "check_type": "ai_semantic",
+    "conditions": {
+      "prompt_template": "请检查英文摘要是否包含以下组成部分：英文题目、作者姓名、专业名称、导师姓名、ABSTRACT、摘要内容、关键词。\n文本：{text}\n请以JSON格式回答：{format_spec}",
+      "format_spec": {
+        "has_all_parts": true,
+        "missing_parts": [],
+        "suggestion": ""
+      },
+      "batch_mode": "by_zone"
+    },
+    "detection_method": "结构顺序检测",
+    "error_message": "英文摘要组成格式不符：由上到下应包含英文题目、作者姓名、专业名称（括号括起放姓名之后）、导师姓名、\"ABSTRACT\"、英文摘要内容和关键词（KEY WORDS）",
+    "enabled": true,
+    "_comment": "英文摘要组成检查"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_11",
+    "md_source": "七、英文摘要格式",
+    "md_source_key": "七、英文摘要格式::\"ABSTRACT\"标题",
+    "element_name": "\"ABSTRACT\"标题",
+    "format_requirement": "Arial，小四号，居中，加粗，20磅行距，段前8磅，段后6磅",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_en": "Arial",
+      "font_size_pt": 14,
+      "alignment": "CENTER",
+      "bold": true,
+      "space_before_pt": 8,
+      "space_after_pt": 6
+    },
+    "detection_method": "字体、加粗属性检测",
+    "error_message": "\"ABSTRACT\"标题格式不符：Arial，小四号，居中，加粗，20磅行距，段前8磅，段后6磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "ABSTRACT_CN_12",
+    "md_source": "七、英文摘要格式",
+    "md_source_key": "七、英文摘要格式::英文摘要正文",
+    "element_name": "英文摘要正文",
+    "format_requirement": "Times New Roman，小四号，首行空2汉字符，两端对齐，英文标点，20磅行距，段前段后0磅",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_en": "Times New Roman",
+      "font_size_pt": 14,
+      "alignment": "JUSTIFY",
+      "space_after_pt": 0
+    },
+    "detection_method": "字体检测、首行缩进检测",
+    "error_message": "英文摘要正文格式不符：Times New Roman，小四号，首行空2汉字符，两端对齐，英文标点，20磅行距，段前段后0磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "ABSTRACT_CN_13",
+    "md_source": "七、英文摘要格式",
+    "md_source_key": "七、英文摘要格式::英文关键词",
+    "element_name": "英文关键词",
+    "format_requirement": "对应中文翻译，首字母大写，英文逗号\",\"分隔",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^[A-Z][a-z]+",
+      "match_mode": "must_match",
+      "zones": [
+        "abstract_en"
+      ]
+    },
+    "detection_method": "首字母大写检测、分隔符检测",
+    "error_message": "英文关键词格式不符：对应中文翻译，首字母大写，英文逗号\",\"分隔",
+    "enabled": true,
+    "_comment": "英文关键词首字母大写"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_14",
+    "md_source": "七、英文摘要格式",
+    "md_source_key": "七、英文摘要格式::翻译一致性",
+    "element_name": "翻译一致性",
+    "format_requirement": "同一词语英文翻译需统一",
+    "automation_level": "semi",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python+Claude",
+    "check_type": "ai_semantic",
+    "conditions": {
+      "prompt_template": "请检查以下中英文摘要中相同术语的翻译是否一致。\n中文摘要：{abstract_cn}\n英文摘要：{abstract_en}\n请以JSON格式回答：{format_spec}",
+      "format_spec": {
+        "consistent": true,
+        "inconsistent_terms": [],
+        "suggestion": ""
+      },
+      "batch_mode": "by_zone"
+    },
+    "detection_method": "需建立术语词库进行全文匹配，人工复核同义词合理性",
+    "error_message": "翻译一致性格式不符：同一词语英文翻译需统一",
+    "enabled": true,
+    "_comment": "翻译一致性检查，需 Claude 语义理解"
+  },
+  {
+    "rule_id": "TOC_01",
+    "md_source": "八、目录格式",
+    "md_source_key": "八、目录格式::\"目录\"二字",
+    "element_name": "\"目录\"二字",
+    "format_requirement": "同\"摘要\"格式（黑体三号居中，段前24磅段后18磅）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "toc"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 16,
+      "alignment": "CENTER",
+      "space_before_pt": 24,
+      "space_after_pt": 18
+    },
+    "detection_method": "同摘要检测逻辑",
+    "error_message": "\"目录\"二字格式不符：同\"摘要\"格式（黑体三号居中，段前24磅段后18磅）",
+    "enabled": true
+  },
+  {
+    "rule_id": "TOC_02",
+    "md_source": "八、目录格式",
+    "md_source_key": "八、目录格式::目录内容组成",
+    "element_name": "目录内容组成",
+    "format_requirement": "章节序号、标题名称和页码，一般列到二级标题",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "toc"
+    ],
+    "engine": "Python",
+    "check_type": "ai_semantic",
+    "conditions": {
+      "prompt_template": "请检查目录是否包含：章节序号、标题名称和页码。\n文本：{text}\n请以JSON格式回答：{format_spec}",
+      "format_spec": {
+        "has_all_parts": true,
+        "missing_parts": []
+      },
+      "batch_mode": "by_zone"
+    },
+    "detection_method": "TOC（目录）字段检测",
+    "error_message": "目录内容组成格式不符：章节序号、标题名称和页码，一般列到二级标题",
+    "enabled": true,
+    "_comment": "目录内容组成"
+  },
+  {
+    "rule_id": "TOC_03",
+    "md_source": "八、目录格式",
+    "md_source_key": "八、目录格式::章标题格式",
+    "element_name": "章标题格式",
+    "format_requirement": "黑体，小四号，20磅行距，段前6磅，段后0磅",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "toc"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 14,
+      "space_before_pt": 6,
+      "space_after_pt": 0
+    },
+    "detection_method": "目录样式属性检测",
+    "error_message": "章标题格式格式不符：黑体，小四号，20磅行距，段前6磅，段后0磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "TOC_04",
+    "md_source": "八、目录格式",
+    "md_source_key": "八、目录格式::节标题格式",
+    "element_name": "节标题格式",
+    "format_requirement": "宋体，小四号，20磅行距，段前段后0磅",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "toc"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_size_pt": 14,
+      "space_after_pt": 0
+    },
+    "detection_method": "目录样式属性检测",
+    "error_message": "节标题格式格式不符：宋体，小四号，20磅行距，段前段后0磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "TOC_05",
+    "md_source": "八、目录格式",
+    "md_source_key": "八、目录格式::缩进要求",
+    "element_name": "缩进要求",
+    "format_requirement": "章标题居左，一级节标题缩进1汉字符，二级节标题缩进2汉字符",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "toc"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^\\s+",
+      "match_mode": "must_match",
+      "_comment": "目录缩进检测"
+    },
+    "detection_method": "目录缩进级别检测（0.74cm/1.48cm）",
+    "error_message": "缩进要求格式不符：章标题居左，一级节标题缩进1汉字符，二级节标题缩进2汉字符",
+    "enabled": true
+  },
+  {
+    "rule_id": "TOC_06",
+    "md_source": "八、目录格式",
+    "md_source_key": "八、目录格式::EMBA特殊要求",
+    "element_name": "EMBA特殊要求",
+    "format_requirement": "一般只展示到一级节标题",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "toc"
+    ],
+    "engine": "Python",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "toc_levels",
+      "max_value": 1
+    },
+    "detection_method": "目录层级深度检测（TOC Level）",
+    "error_message": "EMBA特殊要求格式不符：一般只展示到一级节标题",
+    "enabled": true,
+    "_comment": "EMBA 目录一般只展示到一级节标题"
+  },
+  {
+    "rule_id": "TOC_07",
+    "md_source": "八、目录格式",
+    "md_source_key": "八、目录格式::页码生成",
+    "element_name": "页码生成",
+    "format_requirement": "必须Word自动生成，禁止手动输入",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group1_HeaderFooter",
+    "target_zone": [
+      "toc"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\{[^}]*PAGE[^}]*\\}",
+      "match_mode": "must_match",
+      "scope": "toc"
+    },
+    "detection_method": "域代码检测（是否为`{ PAGE }`字段而非静态文本）",
+    "error_message": "页码生成格式不符：必须Word自动生成，禁止手动输入",
+    "enabled": true,
+    "_comment": "目录页码必须为自动生成（域代码）"
+  },
+  {
+    "rule_id": "TOC_08",
+    "md_source": "八、目录格式",
+    "md_source_key": "八、目录格式::目录行间距",
+    "element_name": "目录行间距",
+    "format_requirement": "不做统一要求，应根据目录行的多少自行设定，能充满整页或整页的80%为原则",
+    "automation_level": "semi",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "toc"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "toc_lines",
+      "min_value": 10,
+      "max_value": 50
+    },
+    "detection_method": "可检测目录总行数与页面占比；人工微调",
+    "error_message": "目录行间距格式不符：不做统一要求，应根据目录行的多少自行设定，能充满整页或整页的80%为原则",
+    "enabled": true,
+    "_comment": "目录行数检查（10-50行）"
+  },
+  {
+    "rule_id": "TOC_09",
+    "md_source": "八、目录格式",
+    "md_source_key": "八、目录格式::标题标点禁用",
+    "element_name": "标题标点禁用",
+    "format_requirement": "各级标题中一般不能有标点符号",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "toc"
+    ],
+    "engine": "Python",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [
+        "，",
+        "。",
+        "；",
+        "：",
+        "！",
+        "？"
+      ],
+      "match_mode": "not_contains",
+      "zones": [
+        "toc"
+      ]
+    },
+    "detection_method": "标题文本标点检测",
+    "error_message": "标题标点禁用格式不符：各级标题中一般不能有标点符号",
+    "enabled": true,
+    "_comment": "目录标题中一般不能有标点"
+  },
+  {
+    "rule_id": "TOC_10",
+    "md_source": "八、目录格式",
+    "md_source_key": "八、目录格式::标题长度",
+    "element_name": "标题长度",
+    "format_requirement": "各级标题要高度概括，不要太长",
+    "automation_level": "semi",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "toc"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "toc_title_length",
+      "max_value": 30
+    },
+    "detection_method": "标题字数统计可编程；是否\"太长\"需人工判断",
+    "error_message": "标题长度格式不符：各级标题要高度概括，不要太长",
+    "enabled": true,
+    "_comment": "目录标题长度检查"
+  },
+  {
+    "rule_id": "TOC_11",
+    "md_source": "八、目录格式",
+    "md_source_key": "八、目录格式::图表目录",
+    "element_name": "图表目录",
+    "format_requirement": "论文的图表一般不用专门制作目录，如确有必要，可另起一页放到本目录之后",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group3_Figures",
+    "target_zone": [
+      "toc"
+    ],
+    "engine": "Python",
+    "check_type": "text_match",
+    "conditions": {
+      "expected_text": "",
+      "match_mode": "not_contains",
+      "zones": [
+        "toc"
+      ]
+    },
+    "detection_method": "检测是否存在图表目录及位置",
+    "error_message": "图表目录格式不符：论文的图表一般不用专门制作目录，如确有必要，可另起一页放到本目录之后",
+    "enabled": true,
+    "_comment": "图表目录一般不需要"
+  },
+  {
+    "rule_id": "HEADING_01",
+    "md_source": "九、正文标题格式",
+    "md_source_key": "九、正文标题格式::章标题（一级）",
+    "element_name": "章标题（一级）",
+    "format_requirement": "中文数字（第一章），序号与标题间空1汉字符，黑体三号居中，单倍行距，段前24磅段后18磅",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "must_match",
+      "pattern": "^第[一二三四五六七八九十百千]+[章节部分]",
+      "zones": [
+        "body_chapter"
+      ]
+    },
+    "detection_method": "正则匹配`第[一二三四五六七八九十]+章\\s+标题`、样式检测",
+    "error_message": "章标题（一级）格式不符：中文数字（第一章），序号与标题间空1汉字符，黑体三号居中，单倍行距，段前24磅段后18磅",
+    "enabled": true,
+    "_comment": "章标题格式"
+  },
+  {
+    "rule_id": "HEADING_02",
+    "md_source": "九、正文标题格式",
+    "md_source_key": "九、正文标题格式::一级节标题（1.1）",
+    "element_name": "一级节标题（1.1）",
+    "format_requirement": "阿拉伯数字，半角小数点（1.1），空1汉字符，黑体四号居左，20磅行距，段前24磅段后6磅",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "match_mode": "must_match",
+      "font_size_pt": 14,
+      "bold": true,
+      "alignment": "LEFT",
+      "line_spacing_type": "MULTIPLE",
+      "line_spacing_value": 1.5,
+      "space_before_pt": 24,
+      "space_after_pt": 6,
+      "_comment": "二级标题: 黑体四号居左, 1.5倍行距, 段前24磅段后6磅"
+    },
+    "detection_method": "正则匹配`\\d+\\.\\d+\\s+标题`、大纲级别检测（Level 2）",
+    "error_message": "一级节标题（1.1）格式不符：阿拉伯数字，半角小数点（1.1），空1汉字符，黑体四号居左，20磅行距，段前24磅段后6磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "HEADING_03",
+    "md_source": "九、正文标题格式",
+    "md_source_key": "九、正文标题格式::二级节标题（1.1.1）",
+    "element_name": "二级节标题（1.1.1）",
+    "format_requirement": "黑体13pt居左，空1汉字符，20磅行距，段前12磅段后6磅",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "space_before_pt": 12,
+      "space_after_pt": 6
+    },
+    "detection_method": "大纲级别检测（Level 3）、字号检测（13pt≈小四）",
+    "error_message": "二级节标题（1.1.1）格式不符：黑体13pt居左，空1汉字符，20磅行距，段前12磅段后6磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "HEADING_04",
+    "md_source": "九、正文标题格式",
+    "md_source_key": "九、正文标题格式::三级节标题（1.1.1.1）",
+    "element_name": "三级节标题（1.1.1.1）",
+    "format_requirement": "黑体小四居左，空1汉字符，20磅行距，段前12磅段后6磅",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 12,
+      "space_before_pt": 12,
+      "space_after_pt": 6
+    },
+    "detection_method": "大纲级别检测（Level 4）",
+    "error_message": "三级节标题（1.1.1.1）格式不符：黑体小四居左，空1汉字符，20磅行距，段前12磅段后6磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "HEADING_05",
+    "md_source": "九、正文标题格式",
+    "md_source_key": "九、正文标题格式::标题自信要求",
+    "element_name": "标题自信要求",
+    "format_requirement": "禁止\"可能的创新点\"等不自信表述，应直接写\"创新点\"",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [
+        "可能的创新点",
+        "可能的贡献",
+        "也许",
+        "或许",
+        "可能"
+      ],
+      "match_mode": "not_contains",
+      "zones": [
+        "body_chapter"
+      ]
+    },
+    "detection_method": "禁用词库匹配（\"可能\"、\"或许\"、\"也许\"等前缀检测）",
+    "error_message": "标题自信要求格式不符：禁止\"可能的创新点\"等不自信表述，应直接写\"创新点\"",
+    "enabled": true,
+    "_comment": "标题自信要求，禁止不自信表述"
+  },
+  {
+    "rule_id": "BODY_01",
+    "md_source": "十、正文段落格式",
+    "md_source_key": "十、正文段落格式::正文字数",
+    "element_name": "正文字数",
+    "format_requirement": "**2万字以上**（硬性指标）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "chinese_chars",
+      "min_value": 20000,
+      "zones": [
+        "body_chapter"
+      ]
+    },
+    "detection_method": "全文纯文本字符统计（不含空格、标点）",
+    "error_message": "正文字数格式不符：**2万字以上**（硬性指标）",
+    "enabled": true,
+    "_comment": "正文字数 2 万字以上"
+  },
+  {
+    "rule_id": "BODY_02",
+    "md_source": "十、正文段落格式",
+    "md_source_key": "十、正文段落格式::段落文字",
+    "element_name": "段落文字",
+    "format_requirement": "宋体，小四号，20磅行距，两端对齐，首行缩进2汉字符，段前段后0磅（如有数学表达式时，可根据表达需要设置该段的行距）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_size_pt": 14,
+      "alignment": "JUSTIFY",
+      "space_after_pt": 0
+    },
+    "detection_method": "段落样式全量检测",
+    "error_message": "段落文字格式不符：宋体，小四号，20磅行距，两端对齐，首行缩进2汉字符，段前段后0磅（如有数学表达式时，可根据表达需要设置该段的行距）",
+    "enabled": true
+  },
+  {
+    "rule_id": "BODY_03",
+    "md_source": "十、正文段落格式",
+    "md_source_key": "十、正文段落格式::英文/数字",
+    "element_name": "英文/数字",
+    "format_requirement": "Times New Roman字体",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_en": "Times New Roman"
+    },
+    "detection_method": "字体家族检测",
+    "error_message": "英文/数字格式不符：Times New Roman字体",
+    "enabled": true
+  },
+  {
+    "rule_id": "BODY_04",
+    "md_source": "十、正文段落格式",
+    "md_source_key": "十、正文段落格式::人称规范",
+    "element_name": "人称规范",
+    "format_requirement": "以**第三人称或中立研究者**表述，禁止\"我\"、\"我们\"（除致谢外）",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "match_mode": "not_contains",
+      "inline_words": [
+        "百度百科",
+        "360百科",
+        "维基百科"
+      ],
+      "zones": [
+        "body_chapter",
+        "references"
+      ]
+    },
+    "detection_method": "正则匹配第一人称代词（需排除致谢章节）",
+    "error_message": "人称规范格式不符：以**第三人称或中立研究者**表述，禁止\"我\"、\"我们\"（除致谢外）",
+    "enabled": true,
+    "_comment": "禁止网络百科引用"
+  },
+  {
+    "rule_id": "BODY_05",
+    "md_source": "十、正文段落格式",
+    "md_source_key": "十、正文段落格式::段落长度",
+    "element_name": "段落长度",
+    "format_requirement": "不能太长（缺乏层次），不能一句一行（PPT写法）；一页内不超过3条节标题",
+    "automation_level": "semi",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python+Claude",
+    "check_type": "count_check",
+    "conditions": {
+      "max_value": 3,
+      "count_type": "references_in_chapter",
+      "min_value": 1
+    },
+    "detection_method": "段落字数统计可编程；是否\"一句一行\"需人工判断排版密度",
+    "error_message": "段落长度格式不符：不能太长（缺乏层次），不能一句一行（PPT写法）；一页内不超过3条节标题",
+    "enabled": true,
+    "_comment": "每章引用数量"
+  },
+  {
+    "rule_id": "BODY_06",
+    "md_source": "十、正文段落格式",
+    "md_source_key": "十、正文段落格式::禁止PPT符号",
+    "element_name": "禁止PPT符号",
+    "format_requirement": "正文中不能出现类似PPT的符号，如√、●、▶、▲等",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "must_not_match",
+      "pattern": "[√●▶▲▼◆■★☆]",
+      "_comment": "禁止PPT符号"
+    },
+    "detection_method": "Unicode特殊符号检测",
+    "error_message": "禁止PPT符号格式不符：正文中不能出现类似PPT的符号，如√、●、▶、▲等",
+    "enabled": true
+  },
+  {
+    "rule_id": "BODY_07",
+    "md_source": "十、正文段落格式",
+    "md_source_key": "十、正文段落格式::句子长度",
+    "element_name": "句子长度",
+    "format_requirement": "每个句子不要太长，需要精炼缩短，注意可读性与流畅性",
+    "automation_level": "semi",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python+Claude",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "items"
+    },
+    "detection_method": "句子字数统计可编程；是否过长需人工判断",
+    "error_message": "句子长度格式不符：每个句子不要太长，需要精炼缩短，注意可读性与流畅性",
+    "enabled": true
+  },
+  {
+    "rule_id": "MISC_01",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::编号规则",
+    "element_name": "编号规则",
+    "format_requirement": "2个阿拉伯数字，章序号+顺序号，半角小数点（如2.1）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "must_match",
+      "pattern": "图\\s*\\d+\\.\\d+",
+      "_comment": "图编号: 2.1 格式"
+    },
+    "detection_method": "题注正则匹配`图\\s*\\d+\\.\\d+`",
+    "error_message": "编号规则格式不符：2个阿拉伯数字，章序号+顺序号，半角小数点（如2.1）",
+    "enabled": true
+  },
+  {
+    "rule_id": "MISC_02",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::图题格式",
+    "element_name": "图题格式",
+    "format_requirement": "宋体11pt，居中，单倍行距，段前6磅段后12磅",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group3_Figures",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "alignment": "CENTER",
+      "space_before_pt": 6,
+      "space_after_pt": 12
+    },
+    "detection_method": "题注样式检测",
+    "error_message": "图题格式格式不符：宋体11pt，居中，单倍行距，段前6磅段后12磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "MISC_03",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::图题位置",
+    "element_name": "图题位置",
+    "format_requirement": "图序号与图名空1汉字符，置于图下方",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group3_Figures",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "position": "below_figure"
+    },
+    "detection_method": "题注位置检测（下方）、间距检测",
+    "error_message": "图题位置格式不符：图序号与图名空1汉字符，置于图下方",
+    "enabled": true,
+    "_comment": "图题位置"
+  },
+  {
+    "rule_id": "MISC_04",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::图中标注文字",
+    "element_name": "图中标注文字",
+    "format_requirement": "采用9-10.5pt字号，以能够清晰阅读为标准",
+    "automation_level": "semi",
+    "urgency": "★★★★☆",
+    "target_group": "Group3_Figures",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "图像内文字字号难以自动检测，需人工核查",
+    "error_message": "图中标注文字格式不符：采用9-10.5pt字号，以能够清晰阅读为标准",
+    "enabled": true,
+    "_comment": "图中标注文字 - 需视觉检查"
+  },
+  {
+    "rule_id": "MISC_05",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::正文引用",
+    "element_name": "正文引用",
+    "format_requirement": "正文中需注明\"（见图2.1）\"",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {
+      "match_mode": "must_match"
+    },
+    "detection_method": "交叉引用检测或正则匹配`见图\\s*\\d+\\.\\d+`",
+    "error_message": "正文引用格式不符：正文中需注明\"（见图2.1）\"",
+    "enabled": true,
+    "_comment": "图表引用 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_06",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::资料来源",
+    "element_name": "资料来源",
+    "format_requirement": "置于图名下方，居中，\"资料来源：XXXX\"；公司资料注明\"根据XX公司内部资料整理\"；如资料来自参考文献的，应按参考文献在正文中的方式注明",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "text_match",
+    "conditions": {
+      "match_mode": "contains",
+      "expected_text": "图"
+    },
+    "detection_method": "文本匹配、位置检测（图题下方）",
+    "error_message": "资料来源格式不符：置于图名下方，居中，\"资料来源：XXXX\"；公司资料注明\"根据XX公司内部资料整理\"；如资料来自参考文献的，应按参考文献在正文中的方式注明",
+    "enabled": true,
+    "_comment": "图中文字"
+  },
+  {
+    "rule_id": "MISC_07",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::图表附注",
+    "element_name": "图表附注",
+    "format_requirement": "若图或表有附注，采用英文小写字母顺序编号（a, b, c...），附注写在图或表的下方",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group3_Figures",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "检测附注编号格式",
+    "error_message": "图表附注格式不符：若图或表有附注，采用英文小写字母顺序编号（a, b, c...），附注写在图或表的下方",
+    "enabled": true,
+    "_comment": "图表附注 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_08",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::分图编号",
+    "element_name": "分图编号",
+    "format_requirement": "一个图由两个以上分图组成时，各分图分别以(a)、(b)、(c)……作为图序，并须有分图名",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group3_Figures",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {
+      "match_mode": "must_match"
+    },
+    "detection_method": "正则匹配`\\([a-z]\\)`",
+    "error_message": "分图编号格式不符：一个图由两个以上分图组成时，各分图分别以(a)、(b)、(c)……作为图序，并须有分图名",
+    "enabled": true,
+    "_comment": "表格续表 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_09",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::编号规则",
+    "element_name": "编号规则",
+    "format_requirement": "同图（如2.1）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "must_match",
+      "pattern": "表\\s*\\d+\\.\\d+",
+      "_comment": "表编号: 2.1 格式"
+    },
+    "detection_method": "题注正则匹配`表\\s*\\d+\\.\\d+`",
+    "error_message": "编号规则格式不符：同图（如2.1）",
+    "enabled": true
+  },
+  {
+    "rule_id": "MISC_10",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::表题格式",
+    "element_name": "表题格式",
+    "format_requirement": "宋体11pt，居中，单倍行距，段前12磅段后6磅",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group3_Tables",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "alignment": "CENTER",
+      "space_before_pt": 12,
+      "space_after_pt": 6
+    },
+    "detection_method": "题注样式检测",
+    "error_message": "表题格式格式不符：宋体11pt，居中，单倍行距，段前12磅段后6磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "MISC_11",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::表题位置",
+    "element_name": "表题位置",
+    "format_requirement": "表序号与表名空1汉字符，置于表上方",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group3_Tables",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "position": "above_table"
+    },
+    "detection_method": "题注位置检测（上方）",
+    "error_message": "表题位置格式不符：表序号与表名空1汉字符，置于表上方",
+    "enabled": true,
+    "_comment": "表题位置"
+  },
+  {
+    "rule_id": "MISC_12",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::单元格文字",
+    "element_name": "单元格文字",
+    "format_requirement": "宋体11pt，单倍行距，段前段后3磅",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "space_after_pt": 3
+    },
+    "detection_method": "表格样式检测",
+    "error_message": "单元格文字格式不符：宋体11pt，单倍行距，段前段后3磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "MISC_13",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::计量单位",
+    "element_name": "计量单位",
+    "format_requirement": "标明量和单位符号（如\"单位：人\"）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "must_match",
+      "pattern": "单位[：:]",
+      "_comment": "表中标明量和单位"
+    },
+    "detection_method": "表题或表头正则匹配`单位[：:]`",
+    "error_message": "计量单位格式不符：标明量和单位符号（如\"单位：人\"）",
+    "enabled": true
+  },
+  {
+    "rule_id": "MISC_14",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::正文引用",
+    "element_name": "正文引用",
+    "format_requirement": "正文中需注明\"（见表2.1）\"",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {
+      "match_mode": "must_match"
+    },
+    "detection_method": "交叉引用检测或正则匹配`见表\\s*\\d+\\.\\d+`",
+    "error_message": "正文引用格式不符：正文中需注明\"（见表2.1）\"",
+    "enabled": true,
+    "_comment": "变量统一性 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_15",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::资料来源",
+    "element_name": "资料来源",
+    "format_requirement": "表下方居左空2汉字符，宋体五号，单倍行距，段前6磅段后12磅；有续表时，资料来源注明在续表下方",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_size_pt": 10.5,
+      "space_before_pt": 6,
+      "space_after_pt": 12
+    },
+    "detection_method": "段落缩进（1.48cm）、字体检测",
+    "error_message": "资料来源格式不符：表下方居左空2汉字符，宋体五号，单倍行距，段前6磅段后12磅；有续表时，资料来源注明在续表下方",
+    "enabled": true
+  },
+  {
+    "rule_id": "MISC_16",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::续表",
+    "element_name": "续表",
+    "format_requirement": "跨页时加\"续\"字（如\"续表2.1 2021年人口及人口密度统计表\"）",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group3_Tables",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "text_match",
+    "conditions": {
+      "match_mode": "contains",
+      "expected_text": "续表"
+    },
+    "detection_method": "表格分页检测、表头文本匹配",
+    "error_message": "续表格式不符：跨页时加\"续\"字（如\"续表2.1 2021年人口及人口密度统计表\"）",
+    "enabled": true,
+    "_comment": "续表标识"
+  },
+  {
+    "rule_id": "MISC_17",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::图表清晰度",
+    "element_name": "图表清晰度",
+    "format_requirement": "清晰，无水印；有水印需重绘，禁止复制粘贴",
+    "automation_level": "semi",
+    "urgency": "★★★★★",
+    "target_group": "Group3_Figures",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python+Claude",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "图像分辨率可检测（DPI）；是否有水印需图像识别或人工",
+    "error_message": "图表清晰度格式不符：清晰，无水印；有水印需重绘，禁止复制粘贴",
+    "enabled": true,
+    "_comment": "图表清晰度 - 需图像识别，无法自动检测"
+  },
+  {
+    "rule_id": "MISC_18",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::图文结合",
+    "element_name": "图文结合",
+    "format_requirement": "论文中出现的图或表，需要在正文中提及或阐述，否则删掉",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group3_Figures",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "cross_reference",
+    "conditions": {
+      "must_match": true
+    },
+    "detection_method": "正文中图表引用与实际图表对应检测",
+    "error_message": "图文结合格式不符：论文中出现的图或表，需要在正文中提及或阐述，否则删掉",
+    "enabled": true
+  },
+  {
+    "rule_id": "MISC_19",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::表的制作",
+    "element_name": "表的制作",
+    "format_requirement": "必须在Word中插入表格自制，禁止截图粘贴",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group3_Tables",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "global_property",
+    "conditions": {
+      "property": "table_is_native",
+      "expected": true
+    },
+    "detection_method": "表格对象类型检测（是否为原生Table而非InlineShape图片）",
+    "error_message": "表的制作格式不符：必须在Word中插入表格自制，禁止截图粘贴",
+    "enabled": true,
+    "_comment": "表格必须为 Word 原生表格，禁止截图"
+  },
+  {
+    "rule_id": "MISC_20",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::小数位统一",
+    "element_name": "小数位统一",
+    "format_requirement": "表中数字统一小数位（如均保留2位）",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "find_all_violations",
+      "pattern": "\\d+\\.\\d+",
+      "_comment": "表中数字统一小数位(简化版)"
+    },
+    "detection_method": "单元格数值格式正则匹配（一致性检测）",
+    "error_message": "小数位统一格式不符：表中数字统一小数位（如均保留2位）",
+    "enabled": true
+  },
+  {
+    "rule_id": "MISC_21",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::跨页处理",
+    "element_name": "跨页处理",
+    "format_requirement": "表尽量不跨页，调整行距缩短长度",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "表格分页检测（表格是否跨页属性）",
+    "error_message": "跨页处理格式不符：表尽量不跨页，调整行距缩短长度",
+    "enabled": true,
+    "_comment": "表格跨页检测需要复杂XML处理，暂跳过"
+  },
+  {
+    "rule_id": "MISC_22",
+    "md_source": "十一、图表格式",
+    "md_source_key": "十一、图表格式::图表排版",
+    "element_name": "图表排版",
+    "format_requirement": "图表前后**不要留大片空白页面**；可把文字提到图表前后调整顺序",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group3_Figures",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "blank_pages_near_figure",
+      "max_value": 0
+    },
+    "detection_method": "段落间距检测（段前段后是否过大导致分页）",
+    "error_message": "图表排版格式不符：图表前后**不要留大片空白页面**；可把文字提到图表前后调整顺序",
+    "enabled": true,
+    "_comment": "图表前后不要留大片空白"
+  },
+  {
+    "rule_id": "EXPR_01",
+    "md_source": "十二、表达式（公式）格式",
+    "md_source_key": "十二、表达式（公式）格式::编号规则",
+    "element_name": "编号规则",
+    "format_requirement": "序号用括号括起置于右边行末，与表达式无连线（如式（2.1））",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "must_match",
+      "pattern": "式\\s*\\(\\d+\\.\\d+\\)",
+      "_comment": "公式编号: 式(2.1)"
+    },
+    "detection_method": "公式编辑器对象检测（OMath对象）、题注格式正则`\\(\\d+\\.\\d+\\)`",
+    "error_message": "编号规则格式不符：序号用括号括起置于右边行末，与表达式无连线（如式（2.1））",
+    "enabled": true
+  },
+  {
+    "rule_id": "EXPR_02",
+    "md_source": "十二、表达式（公式）格式",
+    "md_source_key": "十二、表达式（公式）格式::书写格式",
+    "element_name": "书写格式",
+    "format_requirement": "同正文字号居中，或另起一段空2汉字符；**全文统一**一种格式",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "alignment": "CENTER"
+    },
+    "detection_method": "段落对齐检测（居中/左对齐）、首行缩进检测",
+    "error_message": "书写格式格式不符：同正文字号居中，或另起一段空2汉字符；**全文统一**一种格式",
+    "enabled": true
+  },
+  {
+    "rule_id": "EXPR_03",
+    "md_source": "十二、表达式（公式）格式",
+    "md_source_key": "十二、表达式（公式）格式::行距",
+    "element_name": "行距",
+    "format_requirement": "单倍行距，段前段后6磅",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "space_after_pt": 6,
+      "line_spacing_type": "MULTIPLE",
+      "line_spacing_value": 1.0,
+      "space_before_pt": 6,
+      "_comment": "公式行距: 单倍, 段前段后6磅"
+    },
+    "detection_method": "段落间距检测",
+    "error_message": "行距格式不符：单倍行距，段前段后6磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "EXPR_04",
+    "md_source": "十二、表达式（公式）格式",
+    "md_source_key": "十二、表达式（公式）格式::非独立成行",
+    "element_name": "非独立成行",
+    "format_requirement": "段落行距单倍，段前段后3磅",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "space_after_pt": 3,
+      "line_spacing_type": "MULTIPLE",
+      "line_spacing_value": 1.0,
+      "space_before_pt": 3,
+      "_comment": "公式段落: 单倍行距, 段前段后3磅"
+    },
+    "detection_method": "段落间距检测",
+    "error_message": "非独立成行格式不符：段落行距单倍，段前段后3磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "EXPR_05",
+    "md_source": "十二、表达式（公式）格式",
+    "md_source_key": "十二、表达式（公式）格式::乘号",
+    "element_name": "乘号",
+    "format_requirement": "使用×而非星号*",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\*",
+      "match_mode": "must_not_match",
+      "_comment": "使用×而非*"
+    },
+    "detection_method": "字符检测（U+00D7 vs U+002A）",
+    "error_message": "乘号格式不符：使用×而非星号*",
+    "enabled": true
+  },
+  {
+    "rule_id": "EXPR_06",
+    "md_source": "十二、表达式（公式）格式",
+    "md_source_key": "十二、表达式（公式）格式::正文引用",
+    "element_name": "正文引用",
+    "format_requirement": "正文中有相关表达式处需注明\"（见式2.1）\"",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {
+      "match_mode": "must_match"
+    },
+    "detection_method": "正则匹配`见式\\s*\\d+\\.\\d+`或`式（\\d+\\.\\d+）`",
+    "error_message": "正文引用格式不符：正文中有相关表达式处需注明\"（见式2.1）\"",
+    "enabled": true,
+    "_comment": "变量斜体 - 需人工判断"
+  },
+  {
+    "rule_id": "FOOT_01",
+    "md_source": "十三、脚注格式",
+    "md_source_key": "十三、脚注格式::正文中脚注标记",
+    "element_name": "正文中脚注标记",
+    "format_requirement": "在正文中需要注释的句子结尾处用①②③样式的数字编排序号，以**\"上标\"字体**标示",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group4_Footnotes",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "上标字体属性检测",
+    "error_message": "正文中脚注标记格式不符：在正文中需要注释的句子结尾处用①②③样式的数字编排序号，以**\"上标\"字体**标示",
+    "enabled": true,
+    "_comment": "脚注内容 - 需人工判断"
+  },
+  {
+    "rule_id": "FOOT_02",
+    "md_source": "十三、脚注格式",
+    "md_source_key": "十三、脚注格式::脚注标记位置",
+    "element_name": "脚注标记位置",
+    "format_requirement": "如果解释的是整句话，标在句子的**最后一个标点符号后面**；如果解释的是一个词语，标在**词语的后面**",
+    "automation_level": "semi",
+    "urgency": "★★★★☆",
+    "target_group": "Group4_Footnotes",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "脚注引用标记位置可检测；是否紧跟正确位置需人工核查",
+    "error_message": "脚注标记位置格式不符：如果解释的是整句话，标在句子的**最后一个标点符号后面**；如果解释的是一个词语，标在**词语的后面**",
+    "enabled": true,
+    "_comment": "脚注格式 - 需人工判断"
+  },
+  {
+    "rule_id": "FOOT_03",
+    "md_source": "十三、脚注格式",
+    "md_source_key": "十三、脚注格式::脚注区字体",
+    "element_name": "脚注区字体",
+    "format_requirement": "中文宋体，英文Times New Roman，小五号",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group4_Footnotes",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_name_en": "Times New Roman",
+      "font_size_pt": 10.5
+    },
+    "detection_method": "脚注文本字体检测",
+    "error_message": "脚注区字体格式不符：中文宋体，英文Times New Roman，小五号",
+    "enabled": true
+  },
+  {
+    "rule_id": "FOOT_04",
+    "md_source": "十三、脚注格式",
+    "md_source_key": "十三、脚注格式::对齐方式",
+    "element_name": "对齐方式",
+    "format_requirement": "两端对齐，悬挂缩进1.5字符",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "alignment": "JUSTIFY",
+      "hanging_indent_char": 1.5
+    },
+    "detection_method": "段落缩进检测（约1.11cm）",
+    "error_message": "对齐方式格式不符：两端对齐，悬挂缩进1.5字符",
+    "enabled": true
+  },
+  {
+    "rule_id": "FOOT_05",
+    "md_source": "十三、脚注格式",
+    "md_source_key": "十三、脚注格式::行距",
+    "element_name": "行距",
+    "format_requirement": "单倍行距，段前段后0磅",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "space_after_pt": 0,
+      "line_spacing_type": "MULTIPLE",
+      "line_spacing_value": 1.0,
+      "space_before_pt": 0,
+      "_comment": "脚注: 单倍行距，段前段后0磅"
+    },
+    "detection_method": "行距检测",
+    "error_message": "行距格式不符：单倍行距，段前段后0磅",
+    "enabled": true
+  },
+  {
+    "rule_id": "FOOT_06",
+    "md_source": "十三、脚注格式",
+    "md_source_key": "十三、脚注格式::序号规则",
+    "element_name": "序号规则",
+    "format_requirement": "按页编号，不连续；序号非上标（脚注区的序号），与内容空半个汉字符",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "脚注编号格式检测（非上标）、间距检测",
+    "error_message": "序号规则格式不符：按页编号，不连续；序号非上标（脚注区的序号），与内容空半个汉字符",
+    "enabled": true,
+    "_comment": "脚注编号格式需要XML处理，暂跳过"
+  },
+  {
+    "rule_id": "FOOT_07",
+    "md_source": "十三、脚注格式",
+    "md_source_key": "十三、脚注格式::网址标注",
+    "element_name": "网址标注",
+    "format_requirement": "网址应在对应页用脚注标注",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "find_all_violations",
+      "pattern": "https?://|www\\.",
+      "_comment": "网址应在脚注标注(简化版)"
+    },
+    "detection_method": "URL正则匹配检测（http://或www.），位置检测（是否在脚注区）",
+    "error_message": "网址标注格式不符：网址应在对应页用脚注标注",
+    "enabled": true
+  },
+  {
+    "rule_id": "MISC_23",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::著录方法",
+    "element_name": "著录方法",
+    "format_requirement": "\"著者-出版年制\"：著者姓氏与出版年置于\"（）\"内，放在引用句子末尾",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {
+      "match_mode": "must_match"
+    },
+    "detection_method": "正则匹配`\\([\\u4e00-\\u9fa5]+\\s*[,，]\\s*\\d{4}\\)`或`([A-Za-z]+\\s*,\\s*\\d{4})`",
+    "error_message": "著录方法格式不符：\"著者-出版年制\"：著者姓氏与出版年置于\"（）\"内，放在引用句子末尾",
+    "enabled": true,
+    "_comment": "引用标注位置 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_24",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::引用位置",
+    "element_name": "引用位置",
+    "format_requirement": "引用应在**句号的前面**（即句末标点前）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "检测引用标记是否在句号前",
+    "error_message": "引用位置格式不符：引用应在**句号的前面**（即句末标点前）",
+    "enabled": true,
+    "_comment": "引用格式一致性 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_25",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::已提姓名",
+    "element_name": "已提姓名",
+    "format_requirement": "正文已提著者姓名，\"（）\"内只著录出版年（如：张忠智（1997）认为...）",
+    "automation_level": "semi",
+    "urgency": "★★★★☆",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\([\\u4e00-\\u9fa5]+,\\s*\\d{4}\\)",
+      "match_mode": "find_all",
+      "scope": "body_text"
+    },
+    "detection_method": "需上下文语义分析，或人工检查",
+    "error_message": "已提姓名格式不符：正文已提著者姓名，\"（）\"内只著录出版年（如：张忠智（1997）认为...）",
+    "enabled": true,
+    "_comment": "已提姓名只著录出版年"
+  },
+  {
+    "rule_id": "MISC_26",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::英文文献正文引用",
+    "element_name": "英文文献正文引用",
+    "format_requirement": "英文文献在正文中引用处只写作者的**姓（Last name）**",
+    "automation_level": "semi",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\([A-Z][a-z]+,\\s*\\d{4}\\)",
+      "match_mode": "find_all",
+      "scope": "body_text"
+    },
+    "detection_method": "可检测括号内英文是否为单词；完整性需人工核对",
+    "error_message": "英文文献正文引用格式不符：英文文献在正文中引用处只写作者的**姓（Last name）**",
+    "enabled": true,
+    "_comment": "英文文献正文引用只写姓"
+  },
+  {
+    "rule_id": "MISC_27",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::多著者",
+    "element_name": "多著者",
+    "format_requirement": "只标第一著者后附\"等\"（空格隔开）；国外著者标姓后附\"et al.\"（如：印森林 等，2005；Fordham et al., 2019）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {
+      "match_mode": "must_match"
+    },
+    "detection_method": "正则匹配`等\\s*[,，]`或`et al\\.`",
+    "error_message": "多著者格式不符：只标第一著者后附\"等\"（空格隔开）；国外著者标姓后附\"et al.\"（如：印森林 等，2005；Fordham et al., 2019）",
+    "enabled": true,
+    "_comment": "多作者格式 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_28",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::多次引用",
+    "element_name": "多次引用",
+    "format_requirement": "同一文献多次引用，\"（）\"外以上标形式标注页码（如：（霍斯尼，2005）<sup>15-17</sup>）",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {
+      "match_mode": "must_match"
+    },
+    "detection_method": "上标数字检测、正则匹配`\\d+-\\d+`",
+    "error_message": "多次引用格式不符：同一文献多次引用，\"（）\"外以上标形式标注页码（如：（霍斯尼，2005）<sup>15-17</sup>）",
+    "enabled": true,
+    "_comment": "期刊缩写 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_29",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::引用数量",
+    "element_name": "引用数量",
+    "format_requirement": "**15篇以上**（硬性要求）；审稿经验表明15-20篇比较恰当",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "references",
+      "min_value": 15,
+      "zones": [
+        "references"
+      ]
+    },
+    "detection_method": "文末参考文献列表计数",
+    "error_message": "引用数量格式不符：**15篇以上**（硬性要求）；审稿经验表明15-20篇比较恰当",
+    "enabled": true,
+    "_comment": "参考文献 15 篇以上"
+  },
+  {
+    "rule_id": "MISC_30",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::\"参考文献\"四字",
+    "element_name": "\"参考文献\"四字",
+    "format_requirement": "同章标题格式（黑体三号居中，段前24磅段后18磅）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 16,
+      "alignment": "CENTER",
+      "space_before_pt": 24,
+      "space_after_pt": 18
+    },
+    "detection_method": "同章标题检测",
+    "error_message": "\"参考文献\"四字格式不符：同章标题格式（黑体三号居中，段前24磅段后18磅）",
+    "enabled": true
+  },
+  {
+    "rule_id": "MISC_31",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::字体字号",
+    "element_name": "字体字号",
+    "format_requirement": "中文宋体，英文Times New Roman，五号",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_name_en": "Times New Roman",
+      "font_size_pt": 10.5
+    },
+    "detection_method": "字体检测",
+    "error_message": "字体字号格式不符：中文宋体，英文Times New Roman，五号",
+    "enabled": true
+  },
+  {
+    "rule_id": "MISC_32",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::行距",
+    "element_name": "行距",
+    "format_requirement": "16磅行距，段前3磅，段后0磅",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {
+      "space_before_pt": 3,
+      "space_after_pt": 0
+    },
+    "detection_method": "段落间距检测",
+    "error_message": "行距格式不符：16磅行距，段前3磅，段后0磅",
+    "enabled": true,
+    "_comment": "英美拼写 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_33",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::序号",
+    "element_name": "序号",
+    "format_requirement": "每条文献**不加序号**",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "段落开头数字检测（应无）",
+    "error_message": "序号格式不符：每条文献**不加序号**",
+    "enabled": true,
+    "_comment": "外文人名翻译 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_34",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::缩进",
+    "element_name": "缩进",
+    "format_requirement": "悬挂缩进2汉字符",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "悬挂缩进检测（1.48cm）",
+    "error_message": "缩进格式不符：悬挂缩进2汉字符",
+    "enabled": true,
+    "_comment": "外文地名翻译 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_35",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::标点",
+    "element_name": "标点",
+    "format_requirement": "均为英文格式",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[，。；：？！]",
+      "match_mode": "must_not_match",
+      "scope": "full_text",
+      "zones": [
+        "references"
+      ]
+    },
+    "detection_method": "ASCII标点检测",
+    "error_message": "标点格式不符：均为英文格式",
+    "enabled": true,
+    "_comment": "参考文献标点为英文格式"
+  },
+  {
+    "rule_id": "MISC_36",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::书刊名称",
+    "element_name": "书刊名称",
+    "format_requirement": "不加书名号，西文书刊名称也不必用斜体",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "检测参考文献中是否出现书名号《》或斜体标记",
+    "error_message": "书刊名称格式不符：不加书名号，西文书刊名称也不必用斜体",
+    "enabled": true,
+    "_comment": "缩写首次出现 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_37",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::排序",
+    "element_name": "排序",
+    "format_requirement": "按文种集中（中文前，外文后），再按著者姓名拼音和出版年排列",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "reference_sorting",
+      "sorted": true
+    },
+    "detection_method": "排序算法检测（需提取姓名拼音排序）",
+    "error_message": "排序格式不符：按文种集中（中文前，外文后），再按著者姓名拼音和出版年排列",
+    "enabled": true,
+    "_comment": "参考文献排序检查"
+  },
+  {
+    "rule_id": "MISC_38",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::著者规则",
+    "element_name": "著者规则",
+    "format_requirement": "姓前名后；国外著者姓全拼首字母大写，名缩写；3人以上著录前3人加\"，等\"或\"，et al\"；同年多篇用小写字母a,b,c区别",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {
+      "match_mode": "must_match"
+    },
+    "detection_method": "姓名格式正则、作者数量检测、年份后缀检测",
+    "error_message": "著者规则格式不符：姓前名后；国外著者姓全拼首字母大写，名缩写；3人以上著录前3人加\"，等\"或\"，et al\"；同年多篇用小写字母a,b,c区别",
+    "enabled": true,
+    "_comment": "文献完整性 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_39",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::无著者",
+    "element_name": "无著者",
+    "format_requirement": "注明\"佚名\"，英文用\"Anon\"或与之相应的词",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "text_match",
+    "conditions": {
+      "match_mode": "contains",
+      "expected_text": "见"
+    },
+    "detection_method": "文本匹配\"佚名\"或\"Anon\"",
+    "error_message": "无著者格式不符：注明\"佚名\"，英文用\"Anon\"或与之相应的词",
+    "enabled": true,
+    "_comment": "文献引用格式"
+  },
+  {
+    "rule_id": "MISC_40",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::不写国别/朝代",
+    "element_name": "不写国别/朝代",
+    "format_requirement": "不要求写出著者的国别或朝代",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\([A-Z]{2,3}\\)",
+      "match_mode": "must_not_match",
+      "scope": "references"
+    },
+    "detection_method": "检测括号中是否有国别信息",
+    "error_message": "不写国别/朝代格式不符：不要求写出著者的国别或朝代",
+    "enabled": true,
+    "_comment": "不写国别"
+  },
+  {
+    "rule_id": "MISC_41",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::无出版地/出版者",
+    "element_name": "无出版地/出版者",
+    "format_requirement": "无出版地可著录[出版地不详]或[S.l.]，无出版者可著录[出版者不详]或[s.n.]",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "text_match",
+    "conditions": {
+      "match_mode": "contains",
+      "expected_text": "出版地"
+    },
+    "detection_method": "文本匹配",
+    "error_message": "无出版地/出版者格式不符：无出版地可著录[出版地不详]或[S.l.]，无出版者可著录[出版者不详]或[s.n.]",
+    "enabled": true,
+    "_comment": "出版地"
+  },
+  {
+    "rule_id": "MISC_42",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::多出版地/出版者",
+    "element_name": "多出版地/出版者",
+    "format_requirement": "只著录第1个",
+    "automation_level": "semi",
+    "urgency": "★★★☆☆",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^[^(]+",
+      "match_mode": "must_match",
+      "scope": "first_element"
+    },
+    "detection_method": "需人工检查",
+    "error_message": "多出版地/出版者格式不符：只著录第1个",
+    "enabled": true,
+    "_comment": "多出版地只著录第1个"
+  },
+  {
+    "rule_id": "MISC_43",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::不能有重复文献",
+    "element_name": "不能有重复文献",
+    "format_requirement": "参考文献列表中不可出现重复条目",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "unique_references",
+      "expected": "same"
+    },
+    "detection_method": "文献条目去重检测",
+    "error_message": "不能有重复文献格式不符：参考文献列表中不可出现重复条目",
+    "enabled": true,
+    "_comment": "参考文献不能重复"
+  },
+  {
+    "rule_id": "MISC_44",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::期刊需注明期卷页码",
+    "element_name": "期刊需注明期卷页码",
+    "format_requirement": "文献是期刊或杂志时，应注明期号、卷号、页码；文献是论文或书籍不需要页码",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group1_HeaderFooter",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {
+      "match_mode": "must_match"
+    },
+    "detection_method": "正则匹配`\\d+\\(\\d+\\):\\s*\\d+`",
+    "error_message": "期刊需注明期卷页码格式不符：文献是期刊或杂志时，应注明期号、卷号、页码；文献是论文或书籍不需要页码",
+    "enabled": true,
+    "_comment": "英美拼写 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_45",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::禁止引用",
+    "element_name": "禁止引用",
+    "format_requirement": "**禁止引用百度百科**，应引用学术概念和官网数据",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "text_match",
+    "conditions": {
+      "match_mode": "contains",
+      "expected_text": "et al"
+    },
+    "detection_method": "文本匹配\"百度百科\"或\"baike.baidu.com\"",
+    "error_message": "禁止引用格式不符：**禁止引用百度百科**，应引用学术概念和官网数据",
+    "enabled": true,
+    "_comment": "多作者格式"
+  },
+  {
+    "rule_id": "MISC_46",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::一一对应",
+    "element_name": "一一对应",
+    "format_requirement": "文末列出的文献必须在文中被引用，文中引用的必须在文末列出",
+    "automation_level": "semi",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "cross_reference",
+    "conditions": {
+      "caption_pattern": "",
+      "reference_pattern": "",
+      "error_on": "both"
+    },
+    "detection_method": "可提取文中引用与文末列表进行比对，但需处理\"等\"省略和年份匹配逻辑",
+    "error_message": "一一对应格式不符：文末列出的文献必须在文中被引用，文中引用的必须在文末列出",
+    "enabled": true,
+    "_comment": "文中引用与文末参考文献一一对应"
+  },
+  {
+    "rule_id": "MISC_47",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::年份要求",
+    "element_name": "年份要求",
+    "format_requirement": "不要太久远，引用权威和最新文献",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "recent_years_ratio",
+      "min_ratio": 0.5
+    },
+    "detection_method": "年份提取统计（如均早于2010年则预警）",
+    "error_message": "年份要求格式不符：不要太久远，引用权威和最新文献",
+    "enabled": true,
+    "_comment": "引用文献年份检查"
+  },
+  {
+    "rule_id": "MISC_48",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::专著",
+    "element_name": "专著",
+    "format_requirement": "著者, 出版年. 题名. 版本项. 出版地: 出版者: 引文页码（可无）.",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^[A-Z][a-z]+,\\s*\\d{4}\\.\\s*.+\\.\\s*[A-Z]{2}:\\s*.+",
+      "match_mode": "must_match",
+      "scope": "references"
+    },
+    "detection_method": "",
+    "error_message": "专著格式不符：著者, 出版年. 题名. 版本项. 出版地: 出版者: 引文页码（可无）.",
+    "enabled": true,
+    "_comment": "专著格式检查：著者, 出版年. 题名. 出版地: 出版者"
+  },
+  {
+    "rule_id": "MISC_49",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::期刊/报纸（连续出版物）",
+    "element_name": "期刊/报纸（连续出版物）",
+    "format_requirement": "析出的著者, 出版年. 析出文献的题名. 连续出版物题名: 其他题名信息, 卷(期): 引文页码（可无）.",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^[A-Z][a-z]+,\\s*\\d{4}\\.\\s*.+,\\s*.+,\\s*\\d+\\(\\d+\\):\\s*\\d+",
+      "match_mode": "must_match",
+      "scope": "references"
+    },
+    "detection_method": "",
+    "error_message": "期刊/报纸（连续出版物）格式不符：析出的著者, 出版年. 析出文献的题名. 连续出版物题名: 其他题名信息, 卷(期): 引文页码（可无）.",
+    "enabled": true,
+    "_comment": "期刊格式检查：著者, 出版年. 析出文献题名. 期刊名, 卷(期): 页码"
+  },
+  {
+    "rule_id": "MISC_50",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::专利",
+    "element_name": "专利",
+    "format_requirement": "专利申请者或所有者, 出版年. 专利题名: 专利号. 公告日期或公开日期.",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "",
+    "error_message": "专利格式不符：专利申请者或所有者, 出版年. 专利题名: 专利号. 公告日期或公开日期.",
+    "enabled": true,
+    "_comment": "网络文献检查 - 需人工判断"
+  },
+  {
+    "rule_id": "MISC_51",
+    "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::电子文献",
+    "element_name": "电子文献",
+    "format_requirement": "按前述各类型格式写，并在其后必须加上\"[引用日期]. 获取和访问路径. DOI（可无）.\"",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\[引用日期\\]\\.\\s*.+\\.\\s*获取和访问路径",
+      "match_mode": "must_match",
+      "scope": "references"
+    },
+    "detection_method": "",
+    "error_message": "电子文献格式不符：按前述各类型格式写，并在其后必须加上\"[引用日期]. 获取和访问路径. DOI（可无）.\"",
+    "enabled": true,
+    "_comment": "电子文献格式检查"
+  },
+  {
+    "rule_id": "APPENDIX_01",
+    "md_source": "十五、附录格式",
+    "md_source_key": "十五、附录格式::标题格式",
+    "element_name": "标题格式",
+    "format_requirement": "同论文章标题格式",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "appendix"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "style_name_contains": "标题",
+      "font_name_cn": "黑体",
+      "font_size_pt": 16
+    },
+    "detection_method": "同章标题检测",
+    "error_message": "标题格式格式不符：同论文章标题格式",
+    "enabled": true,
+    "_comment": "附录标题同论文章标题格式"
+  },
+  {
+    "rule_id": "APPENDIX_02",
+    "md_source": "十五、附录格式",
+    "md_source_key": "十五、附录格式::编号",
+    "element_name": "编号",
+    "format_requirement": "依顺序大写字母A,B,C...（如附录A）；即使只有一个也编为附录A",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "appendix"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "must_match",
+      "pattern": "附录\\s*[A-Z]",
+      "_comment": "附录编号: 附录A"
+    },
+    "detection_method": "正则匹配`附录\\s*[A-Z]`",
+    "error_message": "编号格式不符：依顺序大写字母A,B,C...（如附录A）；即使只有一个也编为附录A",
+    "enabled": true
+  },
+  {
+    "rule_id": "APPENDIX_03",
+    "md_source": "十五、附录格式",
+    "md_source_key": "十五、附录格式::标题间距",
+    "element_name": "标题间距",
+    "format_requirement": "序号与标题之间空1汉字符",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "appendix"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "space_after_pt": 0,
+      "_comment": "附录序号与标题之间空1汉字符"
+    },
+    "detection_method": "间距检测",
+    "error_message": "标题间距格式不符：序号与标题之间空1汉字符",
+    "enabled": true
+  },
+  {
+    "rule_id": "APPENDIX_04",
+    "md_source": "十五、附录格式",
+    "md_source_key": "十五、附录格式::图表编号",
+    "element_name": "图表编号",
+    "format_requirement": "另行编号，阿拉伯数字，与正文分开（如\"图A.1, 表B.2, 式（C.3）\"）",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group3_Figures",
+    "target_zone": [
+      "appendix"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {
+      "match_mode": "must_match"
+    },
+    "detection_method": "题注正则匹配`[图表]\\s*[A-Z]\\.\\d+`",
+    "error_message": "图表编号格式不符：另行编号，阿拉伯数字，与正文分开（如\"图A.1, 表B.2, 式（C.3）\"）",
+    "enabled": true,
+    "_comment": "附录编号 - 需人工判断"
+  },
+  {
+    "rule_id": "ACK_01",
+    "md_source": "十六、致谢格式",
+    "md_source_key": "十六、致谢格式::\"致谢\"二字",
+    "element_name": "\"致谢\"二字",
+    "format_requirement": "同论文章标题格式",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "style_name_contains": "标题",
+      "font_name_cn": "黑体",
+      "font_size_pt": 16
+    },
+    "detection_method": "同章标题检测",
+    "error_message": "\"致谢\"二字格式不符：同论文章标题格式",
+    "enabled": true,
+    "_comment": "致谢标题同论文章标题格式"
+  },
+  {
+    "rule_id": "ACK_02",
+    "md_source": "十六、致谢格式",
+    "md_source_key": "十六、致谢格式::正文格式",
+    "element_name": "正文格式",
+    "format_requirement": "同论文正文格式（宋体小四，20磅行距等）",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_size_pt": 12
+    },
+    "detection_method": "正文样式检测",
+    "error_message": "正文格式格式不符：同论文正文格式（宋体小四，20磅行距等）",
+    "enabled": true
+  },
+  {
+    "rule_id": "ACK_03",
+    "md_source": "十六、致谢格式",
+    "md_source_key": "十六、致谢格式::篇幅",
+    "element_name": "篇幅",
+    "format_requirement": "建议1/3页以上，不超过1000字",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "acknowledgment"
+    ],
+    "engine": "Python",
+    "check_type": "count_check",
+    "conditions": {
+      "max_value": 1000,
+      "count_type": "chinese_chars"
+    },
+    "detection_method": "字符统计",
+    "error_message": "篇幅格式不符：建议1/3页以上，不超过1000字",
+    "enabled": true
+  },
+  {
+    "rule_id": "TEXT_NORM_01",
+    "md_source": "十七、论文题目与文字表达规范",
+    "md_source_key": "十七、论文题目与文字表达规范::字数",
+    "element_name": "字数",
+    "format_requirement": "一般不宜超过20个汉字",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "title_char_count",
+      "max_value": 20,
+      "zones": [
+        "cover"
+      ]
+    },
+    "detection_method": "字符计数",
+    "error_message": "字数格式不符：一般不宜超过20个汉字",
+    "enabled": true,
+    "_comment": "论文题目不超过 20 个汉字"
+  },
+  {
+    "rule_id": "TEXT_NORM_02",
+    "md_source": "十七、论文题目与文字表达规范",
+    "md_source_key": "十七、论文题目与文字表达规范::禁止空洞词汇",
+    "element_name": "禁止空洞词汇",
+    "format_requirement": "禁止\"新时代背景下\"、\"后疫情时代\"等（除非全文以此为核心展开）",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [
+        "新时代背景下",
+        "后疫情时代"
+      ],
+      "match_mode": "not_contains"
+    },
+    "detection_method": "禁用词库匹配（\"新时代\"、\"背景下\"、\"后疫情\"）",
+    "error_message": "禁止空洞词汇格式不符：禁止\"新时代背景下\"、\"后疫情时代\"等（除非全文以此为核心展开）",
+    "enabled": true,
+    "_comment": "禁止空洞词汇"
+  },
+  {
+    "rule_id": "TEXT_NORM_03",
+    "md_source": "十七、论文题目与文字表达规范",
+    "md_source_key": "十七、论文题目与文字表达规范::主标题不出现公司名",
+    "element_name": "主标题不出现公司名",
+    "format_requirement": "主标题突出研究问题的实质，公司名放副标题\"以X公司为例\"",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [],
+      "word_list_file": "company_names.txt",
+      "match_mode": "not_contains",
+      "zones": [
+        "cover"
+      ]
+    },
+    "detection_method": "主标题中检测公司名称关键词",
+    "error_message": "主标题不出现公司名格式不符：主标题突出研究问题的实质，公司名放副标题\"以X公司为例\"",
+    "enabled": true,
+    "_comment": "主标题不出现公司名（需建立公司名库）"
+  },
+  {
+    "rule_id": "TEXT_NORM_04",
+    "md_source": "十七、论文题目与文字表达规范",
+    "md_source_key": "十七、论文题目与文字表达规范::人称",
+    "element_name": "人称",
+    "format_requirement": "应以第三人称或中立研究者表述",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "inline_words": [
+        "我",
+        "我们",
+        "咱们"
+      ],
+      "match_mode": "not_contains",
+      "exception_zones": [
+        "acknowledgment"
+      ]
+    },
+    "detection_method": "第一人称代词检测（排除致谢章）",
+    "error_message": "人称格式不符：应以第三人称或中立研究者表述",
+    "enabled": true,
+    "_comment": "禁止第一人称（除致谢外）"
+  },
+  {
+    "rule_id": "TEXT_NORM_05",
+    "md_source": "十七、论文题目与文字表达规范",
+    "md_source_key": "十七、论文题目与文字表达规范::公序良俗",
+    "element_name": "公序良俗",
+    "format_requirement": "符合学术研究准确性，且符合公序良俗（如\"等死\"\"找死\"等措辞禁用）",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "match_mode": "not_contains",
+      "inline_words": [
+        "他妈",
+        "傻逼",
+        "混蛋"
+      ]
+    },
+    "detection_method": "禁用词库匹配（粗俗、极端词汇）",
+    "error_message": "公序良俗格式不符：符合学术研究准确性，且符合公序良俗（如\"等死\"\"找死\"等措辞禁用）",
+    "enabled": true,
+    "_comment": "禁止粗俗语言"
+  },
+  {
+    "rule_id": "TEXT_NORM_06",
+    "md_source": "十七、论文题目与文字表达规范",
+    "md_source_key": "十七、论文题目与文字表达规范::口语化",
+    "element_name": "口语化",
+    "format_requirement": "避免口语化（如\"喝茶\"、\"聊天\"）和情感化（如\"国产不靠自己人支持靠谁呢？\"）",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python",
+    "check_type": "forbidden_words",
+    "conditions": {
+      "word_list_file": "colloquial_words.txt",
+      "match_mode": "not_contains"
+    },
+    "detection_method": "口语化词库匹配",
+    "error_message": "口语化格式不符：避免口语化（如\"喝茶\"、\"聊天\"）和情感化（如\"国产不靠自己人支持靠谁呢？\"）",
+    "enabled": true,
+    "_comment": "避免口语化表达"
+  },
+  {
+    "rule_id": "TEXT_NORM_07",
+    "md_source": "十七、论文题目与文字表达规范",
+    "md_source_key": "十七、论文题目与文字表达规范::统一性",
+    "element_name": "统一性",
+    "format_requirement": "全文统一，如外国公司名称要么都英文要么都中文",
+    "automation_level": "semi",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python+Claude",
+    "check_type": "ai_semantic",
+    "conditions": {
+      "prompt_template": "请检查以下文本中外国公司名称的翻译是否统一。\n文本：{text}\n请以JSON格式回答：{format_spec}",
+      "format_spec": {
+        "consistent": true,
+        "inconsistent_terms": [],
+        "suggestion": ""
+      },
+      "batch_mode": "by_zone"
+    },
+    "detection_method": "可提取公司名列表进行一致性比对，但需人工确认合理变体",
+    "error_message": "统一性格式不符：全文统一，如外国公司名称要么都英文要么都中文",
+    "enabled": true,
+    "_comment": "公司名称统一性检查，需语义理解"
+  },
+  {
+    "rule_id": "TEXT_NORM_08",
+    "md_source": "十七、论文题目与文字表达规范",
+    "md_source_key": "十七、论文题目与文字表达规范::禁止滥用标点",
+    "element_name": "禁止滥用标点",
+    "format_requirement": "禁止感叹号、问号、分号、省略号、冒号滥用",
+    "automation_level": "semi",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "标点频率统计可编程；是否\"滥用\"需人工判断语境",
+    "error_message": "禁止滥用标点格式不符：禁止感叹号、问号、分号、省略号、冒号滥用",
+    "enabled": true,
+    "_comment": "统计显著性 - 需人工判断"
+  },
+  {
+    "rule_id": "TEXT_NORM_09",
+    "md_source": "十七、论文题目与文字表达规范",
+    "md_source_key": "十七、论文题目与文字表达规范::禁止病句错字",
+    "element_name": "禁止病句错字",
+    "format_requirement": "禁止病句、错别字、多余空格",
+    "automation_level": "semi",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python+Claude",
+    "check_type": "ai_semantic",
+    "conditions": {
+      "prompt_template": "请检查以下文本是否有病句或错别字。\n文本：{text}\n请以JSON格式回答：{format_spec}",
+      "format_spec": {
+        "has_errors": false,
+        "errors": [],
+        "suggestion": ""
+      },
+      "batch_mode": "by_paragraph"
+    },
+    "detection_method": "错别字可用词典API检测；病句需人工或NLP模型判断",
+    "error_message": "禁止病句错字格式不符：禁止病句、错别字、多余空格",
+    "enabled": true,
+    "_comment": "病句错字检查，需语义理解"
+  },
+  {
+    "rule_id": "TEXT_NORM_10",
+    "md_source": "十七、论文题目与文字表达规范",
+    "md_source_key": "十七、论文题目与文字表达规范::匿名化",
+    "element_name": "匿名化",
+    "format_requirement": "不能使用\"XX公司\"或\"某某公司\"，应叫\"A公司\"或首字母缩写（如华为→HW公司）",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "match_mode": "must_not_match",
+      "pattern": "(XX|某某)\\s*公司",
+      "_comment": "禁止XX公司"
+    },
+    "detection_method": "正则匹配\"XX公司\"\"某某公司\"",
+    "error_message": "匿名化格式不符：不能使用\"XX公司\"或\"某某公司\"，应叫\"A公司\"或首字母缩写（如华为→HW公司）",
+    "enabled": true
+  },
+  {
+    "rule_id": "TEXT_NORM_11",
+    "md_source": "十七、论文题目与文字表达规范",
+    "md_source_key": "十七、论文题目与文字表达规范::专有名词",
+    "element_name": "专有名词",
+    "format_requirement": "专有名词等要专门进行阐述，首次出现应写清中英文全称",
+    "automation_level": "semi",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python+Claude",
+    "check_type": "ai_semantic",
+    "conditions": {
+      "prompt_template": "请检查以下文本中首次出现的专有名词是否提供了中英文全称解释。\n文本：{text}\n请以JSON格式回答：{format_spec}",
+      "format_spec": {
+        "has_abbreviations": true,
+        "unexplained_terms": [],
+        "suggestion": ""
+      },
+      "batch_mode": "by_paragraph"
+    },
+    "detection_method": "缩写词首次出现检测可编程；解释完整性需人工",
+    "error_message": "专有名词格式不符：专有名词等要专门进行阐述，首次出现应写清中英文全称",
+    "enabled": true,
+    "_comment": "专有名词首次出现需解释"
+  },
+  {
+    "rule_id": "TEXT_NORM_12",
+    "md_source": "十七、论文题目与文字表达规范",
+    "md_source_key": "十七、论文题目与文字表达规范::孤立数字",
+    "element_name": "孤立数字",
+    "format_requirement": "突然有孤立的数字或比例出现时，需要再加个解释说明其意思",
+    "automation_level": "semi",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\d+\\.?\\d*%?",
+      "match_mode": "find_all",
+      "scope": "full_text"
+    },
+    "detection_method": "可检测正文中孤立数字；是否需要解释需人工判断",
+    "error_message": "孤立数字格式不符：突然有孤立的数字或比例出现时，需要再加个解释说明其意思",
+    "enabled": true,
+    "_comment": "孤立数字检查"
+  },
+  {
+    "rule_id": "TEXT_NORM_13",
+    "md_source": "十七、论文题目与文字表达规范",
+    "md_source_key": "十七、论文题目与文字表达规范::符号对照表",
+    "element_name": "符号对照表",
+    "format_requirement": "如使用大量符号、标志、缩略词、专门计量单位、自定义名词，应编写\"主要符号对照表\"；如数量不多，随即加以说明即可",
+    "automation_level": "semi",
+    "urgency": "★★★☆☆",
+    "target_group": "Group3_Tables",
+    "target_zone": [
+      "cover"
+    ],
+    "engine": "Python+Manual",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "缩写词频率统计可编程；是否需要对照表需人工判断",
+    "error_message": "符号对照表格式不符：如使用大量符号、标志、缩略词、专门计量单位、自定义名词，应编写\"主要符号对照表\"；如数量不多，随即加以说明即可",
+    "enabled": true,
+    "_comment": "研究伦理 - 需人工判断"
+  },
+  {
+    "rule_id": "CASE_WRITE_01",
+    "md_source": "二十、案例写作规范（写作内容）",
+    "md_source_key": "二十、案例写作规范（写作内容）::最新数据",
+    "element_name": "最新数据",
+    "format_requirement": "引用统计数据时必须引用最新版本，用最权威最新的数据",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "(20[12][0-9]|19[89][0-9])",
+      "match_mode": "find_all",
+      "scope": "full_text"
+    },
+    "detection_method": "年份检测（如财务数据年份与当前年份差距）",
+    "error_message": "最新数据格式不符：引用统计数据时必须引用最新版本，用最权威最新的数据",
+    "enabled": true,
+    "_comment": "数据年份检查，引用最新数据"
+  },
+  {
+    "rule_id": "CASE_WRITE_02",
+    "md_source": "二十、案例写作规范（写作内容）",
+    "md_source_key": "二十、案例写作规范（写作内容）::数据来源",
+    "element_name": "数据来源",
+    "format_requirement": "正文中提到的数据必须注明来源；要引用公开数据（如财报）",
+    "automation_level": "semi",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python+Claude",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "(资料来源|数据来源|来源：|来自)",
+      "match_mode": "must_match",
+      "scope": "full_text"
+    },
+    "detection_method": "可检测数字后是否有来源标注；完整性需人工",
+    "error_message": "数据来源格式不符：正文中提到的数据必须注明来源；要引用公开数据（如财报）",
+    "enabled": true,
+    "_comment": "数据来源标注检查"
+  },
+  {
+    "rule_id": "LIT_REVIEW_01",
+    "md_source": "二十一、文献综述规范（写作内容，如有对应章节）",
+    "md_source_key": "二十一、文献综述规范（写作内容，如有对应章节）::不引过多",
+    "element_name": "不引过多",
+    "format_requirement": "引用文献只引重要的即可，不必过多",
+    "automation_level": "auto",
+    "urgency": "★★★☆☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "references",
+      "min_value": 5,
+      "max_value": 50
+    },
+    "detection_method": "引用数量统计",
+    "error_message": "不引过多格式不符：引用文献只引重要的即可，不必过多",
+    "enabled": true,
+    "_comment": "文献综述引用数量检查"
+  },
+  {
+    "rule_id": "CONCLUSION_01",
+    "md_source": "二十二、案例分析及研究结论规范（写作内容）",
+    "md_source_key": "二十二、案例分析及研究结论规范（写作内容）::研究不足",
+    "element_name": "研究不足",
+    "format_requirement": "结论应增加研究不足之处和本文的局限性",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python+Claude",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "(研究不足|局限性|不足之处)",
+      "match_mode": "must_match",
+      "scope": "last_chapter"
+    },
+    "detection_method": "关键词检测：\"局限\"\"不足\"\"未来研究\"",
+    "error_message": "研究不足格式不符：结论应增加研究不足之处和本文的局限性",
+    "enabled": true,
+    "_comment": "结论需包含研究不足"
+  },
+  {
+    "rule_id": "CONCLUSION_02",
+    "md_source": "二十二、案例分析及研究结论规范（写作内容）",
+    "md_source_key": "二十二、案例分析及研究结论规范（写作内容）::结论禁止",
+    "element_name": "结论禁止",
+    "format_requirement": "结论中不应再写基础知识、不建议有图表",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "figures_in_conclusion",
+      "expected": 0
+    },
+    "detection_method": "结论章图表检测",
+    "error_message": "结论禁止格式不符：结论中不应再写基础知识、不建议有图表",
+    "enabled": true,
+    "_comment": "结论中不应有图表"
+  },
+  {
+    "rule_id": "CONCLUSION_03",
+    "md_source": "二十二、案例分析及研究结论规范（写作内容）",
+    "md_source_key": "二十二、案例分析及研究结论规范（写作内容）::讨论深度",
+    "element_name": "讨论深度",
+    "format_requirement": "结果与讨论须够深入，不能只有一段文字",
+    "automation_level": "auto",
+    "urgency": "★★★★☆",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python+Claude",
+    "check_type": "count_check",
+    "conditions": {
+      "count_type": "chinese_chars"
+    },
+    "detection_method": "结论章字数/段落数统计",
+    "error_message": "讨论深度格式不符：结果与讨论须够深入，不能只有一段文字",
+    "enabled": true
+  },
+  {
+    "rule_id": "CONCLUSION_04",
+    "md_source": "二十二、案例分析及研究结论规范（写作内容）",
+    "md_source_key": "二十二、案例分析及研究结论规范（写作内容）::论文标题",
+    "element_name": "论文标题",
+    "format_requirement": "封面主标题",
+    "automation_level": "auto",
+    "urgency": "黑体，一号，加粗，居中",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 26,
+      "bold": true,
+      "alignment": "CENTER"
+    },
+    "detection_method": "",
+    "error_message": "论文标题格式不符：封面主标题",
+    "enabled": true,
+    "_comment": "封面主标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_05",
+    "md_source": "二十二、案例分析及研究结论规范（写作内容）",
+    "md_source_key": "二十二、案例分析及研究结论规范（写作内容）::封面信息",
+    "element_name": "封面信息",
+    "format_requirement": "姓名学号等",
+    "automation_level": "auto",
+    "urgency": "仿宋，三号，居中",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "skip",
+    "conditions": {},
+    "detection_method": "",
+    "error_message": "封面信息格式不符：姓名学号等",
+    "enabled": true,
+    "_comment": "研究局限表述 - 需人工判断"
+  },
+  {
+    "rule_id": "CONCLUSION_06",
+    "md_source": "二十二、案例分析及研究结论规范（写作内容）",
+    "md_source_key": "二十二、案例分析及研究结论规范（写作内容）::章标题",
+    "element_name": "章标题",
+    "format_requirement": "第一章、第二章...",
+    "automation_level": "auto",
+    "urgency": "黑体，三号，居中，段前24磅，段后18磅",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 16,
+      "alignment": "CENTER"
+    },
+    "detection_method": "",
+    "error_message": "章标题格式不符：第一章、第二章...",
+    "enabled": true,
+    "_comment": "章标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_07",
+    "md_source": "二十二、案例分析及研究结论规范（写作内容）",
+    "md_source_key": "二十二、案例分析及研究结论规范（写作内容）::一级节标题",
+    "element_name": "一级节标题",
+    "format_requirement": "1.1、2.1...",
+    "automation_level": "auto",
+    "urgency": "黑体，四号，左对齐，段前24磅，段后6磅",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 14,
+      "alignment": "LEFT"
+    },
+    "detection_method": "",
+    "error_message": "一级节标题格式不符：1.1、2.1...",
+    "enabled": true,
+    "_comment": "一级节标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_08",
+    "md_source": "二十二、案例分析及研究结论规范（写作内容）",
+    "md_source_key": "二十二、案例分析及研究结论规范（写作内容）::二级节标题",
+    "element_name": "二级节标题",
+    "format_requirement": "1.1.1、2.1.1...",
+    "automation_level": "auto",
+    "urgency": "黑体，13pt，左对齐，段前12磅，段后6磅",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 13,
+      "alignment": "LEFT"
+    },
+    "detection_method": "",
+    "error_message": "二级节标题格式不符：1.1.1、2.1.1...",
+    "enabled": true,
+    "_comment": "二级节标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_09",
+    "md_source": "二十二、案例分析及研究结论规范（写作内容）",
+    "md_source_key": "二十二、案例分析及研究结论规范（写作内容）::三级节标题",
+    "element_name": "三级节标题",
+    "format_requirement": "1.1.1.1...",
+    "automation_level": "auto",
+    "urgency": "黑体，小四，左对齐，段前12磅，段后6磅",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 12,
+      "alignment": "LEFT"
+    },
+    "detection_method": "",
+    "error_message": "三级节标题格式不符：1.1.1.1...",
+    "enabled": true,
+    "_comment": "三级节标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_10",
+    "md_source": "二十二、案例分析及研究结论规范（写作内容）",
+    "md_source_key": "二十二、案例分析及研究结论规范（写作内容）::正文",
+    "element_name": "正文",
+    "format_requirement": "正文段落",
+    "automation_level": "auto",
+    "urgency": "宋体，小四，首行缩进2字符，20磅行距",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_size_pt": 12,
+      "first_line_indent_char": 2
+    },
+    "detection_method": "",
+    "error_message": "正文格式不符：正文段落",
+    "enabled": true,
+    "_comment": "正文段落格式"
+  },
+  {
+    "rule_id": "CONCLUSION_11",
+    "md_source": "二十二、案例分析及研究结论规范（写作内容）",
+    "md_source_key": "二十二、案例分析及研究结论规范（写作内容）::摘要标题",
+    "element_name": "摘要标题",
+    "format_requirement": "\"摘要\"二字",
+    "automation_level": "auto",
+    "urgency": "黑体，三号，居中，段前24磅，段后18磅",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 16,
+      "alignment": "CENTER"
+    },
+    "detection_method": "",
+    "error_message": "摘要标题格式不符：\"摘要\"二字",
+    "enabled": true,
+    "_comment": "摘要标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_12",
+    "md_source": "二十二、案例分析及研究结论规范（写作内容）",
+    "md_source_key": "二十二、案例分析及研究结论规范（写作内容）::参考文献标题",
+    "element_name": "参考文献标题",
+    "format_requirement": "\"参考文献\"四字",
+    "automation_level": "auto",
+    "urgency": "同章标题",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "黑体",
+      "font_size_pt": 16,
+      "alignment": "CENTER"
+    },
+    "detection_method": "",
+    "error_message": "参考文献标题格式不符：\"参考文献\"四字",
+    "enabled": true,
+    "_comment": "参考文献标题格式"
+  },
+  {
+    "rule_id": "CONCLUSION_13",
+    "md_source": "二十二、案例分析及研究结论规范（写作内容）",
+    "md_source_key": "二十二、案例分析及研究结论规范（写作内容）::图表题注",
+    "element_name": "图表题注",
+    "format_requirement": "图1.1、表2.1等",
+    "automation_level": "auto",
+    "urgency": "宋体，11pt，居中",
+    "target_group": "Group3_Figures",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "paragraph_style",
+    "conditions": {
+      "font_name_cn": "宋体",
+      "font_size_pt": 11,
+      "alignment": "CENTER"
+    },
+    "detection_method": "",
+    "error_message": "图表题注格式不符：图1.1、表2.1等",
+    "enabled": true,
+    "_comment": "图表题注格式"
+  },
+  {
+    "rule_id": "ABSTRACT_CN_06A",
+    "md_source": "人工添加",
+    "md_source_key": "人工添加::ABSTRACT_CN_06A",
+    "element_name": "ABSTRACT_CN_06A",
+    "format_requirement": "",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "abstract_cn"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "；",
+      "match_mode": "must_not_match",
+      "scope": "full_text"
+    },
+    "detection_method": "人工添加",
+    "error_message": "【重要】关键词分隔符错误：必须使用中文逗号'，'分隔，不能使用分号'；'！\n当前检测到：关键词使用了分号分隔，请改为中文逗号",
+    "enabled": true,
+    "_comment": "检测中文摘要关键词是否使用正确的分隔符（逗号而非分号）"
+  }
+]

@@ -1,0 +1,6 @@
+# EMBA论文格式审查工具依赖
+# Python >= 3.10 required
+
+python-docx>=0.8.11  # docx读写
+lxml>=4.9           # 安全读取XML（页眉/脚注/域代码，只读不写）
+anthropic>=0.39.0   # Claude API
