@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple, Any
 from docx import Document
 from docx.shared import Pt, RGBColor
+from docx.enum.text import WD_LINE_SPACING
 from docx.oxml.ns import qn
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -106,6 +107,962 @@ class DocxAutoFixer:
         # 输出文档路径（初始为None）
         self.output_path: Optional[str] = None
     
+    def fix_heading_numbering_style(self):
+        """修复标题自动编号格式：去除末尾多余的小数点，并确保加粗"""
+        try:
+            from lxml import etree
+        except ImportError:
+            print("  警告: lxml未安装，跳过编号样式修复")
+            return
+        
+        try:
+            # 获取numbering part
+            numbering_part = self.doc.part.numbering_part
+            if numbering_part is None:
+                print("  文档无numbering part，跳过")
+                return
+            
+            # 获取XML元素
+            numbering_xml = numbering_part._element
+            
+            # 命名空间
+            ns = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+            
+            # 查找所有abstractNum
+            changed = 0
+            bold_fixed = 0
+            
+            for abstract_num in numbering_xml.findall('.//w:abstractNum', ns):
+                # 遍历每个级别的lvl
+                for lvl in abstract_num.findall('.//w:lvl', ns):
+                    lvl_text = lvl.find('w:lvlText', ns)
+                    if lvl_text is None:
+                        continue
+                    
+                    # 获取w:val属性
+                    val = lvl_text.get('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val')
+                    if val is None:
+                        continue
+                    
+                    # 修复1：去除末尾多余的小数点
+                    # 检查条件：
+                    # 1. 包含%符号（说明是编号格式）
+                    # 2. 以.结尾
+                    # 3. 包含至少2个%符号（多级标题）
+                    if '%' in val and val.endswith('.') and val.count('%') >= 2:
+                        new_val = val[:-1]  # 去掉末尾的点
+                        lvl_text.set('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val', new_val)
+                        changed += 1
+                        print(f"    修复: {val} -> {new_val}")
+                    
+                    # 修复2：确保编号加粗
+                    # 检查 <w:rPr> 是否存在 <w:b/>
+                    rPr = lvl.find('w:rPr', ns)
+                    if rPr is None:
+                        # 创建 rPr 元素
+                        from lxml import etree
+                        rPr = etree.SubElement(lvl, '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}rPr')
+                    
+                    # 检查是否有 b 元素（加粗）
+                    b_elem = rPr.find('w:b', ns)
+                    if b_elem is None:
+                        # 添加加粗元素
+                        from lxml import etree
+                        b_elem = etree.SubElement(rPr, '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}b')
+                        bold_fixed += 1
+                    else:
+                        # 检查是否被设置为关闭 (w:val="0")
+                        val = b_elem.get('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val')
+                        if val == "0":
+                            # 移除 w:val 属性，启用加粗
+                            b_elem.attrib.clear()
+                            bold_fixed += 1
+            
+            if changed > 0 or bold_fixed > 0:
+                msg = []
+                if changed > 0:
+                    msg.append(f"修改编号格式 {changed} 处")
+                if bold_fixed > 0:
+                    msg.append(f"添加加粗 {bold_fixed} 处")
+                print(f"  标题编号样式修复: {', '.join(msg)}")
+                self.report.add_fix("HEADING_NUM_STYLE", 0, "修复标题编号样式", success=True)
+            else:
+                print("  标题编号样式: 无需修复")
+                
+        except Exception as e:
+            print(f"  警告: 编号样式修复失败 - {e}")
+    
+    def fix_page_numbers(self):
+        """修复页码：从第一章开始重新编号"""
+        from docx.oxml import OxmlElement
+        from docx.oxml.ns import qn
+        
+        # 查找第一章：使用 Heading 1 样式 且 文本包含"绪论"
+        chapter1_idx = None
+        for i, para in enumerate(self.doc.paragraphs):
+            text = para.text.strip()
+            # 检查是否为 Heading 1 样式，且文本包含"绪论"
+            if para.style and 'Heading 1' in para.style.name:
+                if '绪论' in text:
+                    chapter1_idx = i
+                    break
+        
+        if chapter1_idx is None:
+            print("  未找到'第一章'（Heading 1 + 绪论），跳过页码修复")
+            return
+        
+        print(f"  找到'第一章'在段落 {chapter1_idx}")
+        
+        # 在第一章段落前插入真正的"分节符（下一页）"
+        # 注意：必须插入 sectPr 而不是 br，否则无法创建新节
+        target_para = self.doc.paragraphs[chapter1_idx]
+        p_elem = target_para._element
+        
+        # 创建分节符（下一页）- 这是真正的 Section Break
+        # 在段落之前插入 sectPr
+        sectPr = OxmlElement('w:sectPr')
+        
+        # 设置分节符类型为"下一页" (next page)
+        type_elem = OxmlElement('w:type')
+        type_elem.set(qn('w:val'), 'nextPage')
+        sectPr.append(type_elem)
+        
+        # 设置页面大小 (paperSize A4)
+        pgSz = OxmlElement('w:pgSz')
+        pgSz.set(qn('w:w'), '11906')  # A4 width in twips
+        pgSz.set(qn('w:h'), '16838')  # A4 height in twips
+        sectPr.append(pgSz)
+        
+        # 设置页边距 (default margins)
+        pgMar = OxmlElement('w:pgMar')
+        pgMar.set(qn('w:top'), '1440')
+        pgMar.set(qn('w:right'), '1440')
+        pgMar.set(qn('w:bottom'), '1440')
+        pgMar.set(qn('w:left'), '1440')
+        pgMar.set(qn('w:header'), '851')
+        pgMar.set(qn('w:footer'), '992')
+        pgMar.set(qn('w:gutter'), '0')
+        sectPr.append(pgMar)
+        
+        # 在目标段落之前插入 sectPr
+        # 找到段落的父级元素，在第一个子元素之前插入
+        p_elem.addprevious(sectPr)
+        
+        # 保存并重新加载文档
+        self.doc.save(self.output_path)
+        self.doc = Document(self.output_path)
+        
+        # 重新查找"第一章"段落
+        chapter1_idx_new = None
+        for i, para in enumerate(self.doc.paragraphs):
+            if para.style and 'Heading 1' in para.style.name:
+                if '绪论' in para.text.strip():
+                    chapter1_idx_new = i
+                    break
+        
+        # 获取所有 sections
+        sections = list(self.doc.sections)
+        
+        # 找到包含"第一章"的新section
+        # 新插入的分节符应该创建了一个新的section
+        target_section = None
+        for idx, section in enumerate(sections):
+            # 检查这个section是否在第一章附近
+            # 我们需要找到包含第一章的那个section
+            # 通常新插入的分节符会在倒数第二个位置
+            if idx == len(sections) - 1:
+                target_section = section
+        
+        if target_section is None and sections:
+            target_section = sections[-1]
+        
+        if target_section is None:
+            print("  警告：未能找到目标section")
+            return
+        
+        # 设置页码格式和起始页码
+        sectPr_elem = target_section._sectPr
+        
+        # 查找或创建pgNumType
+        pgNumType = sectPr_elem.find(qn('w:pgNumType'))
+        if pgNumType is None:
+            pgNumType = OxmlElement('w:pgNumType')
+            sectPr_elem.append(pgNumType)
+        
+        pgNumType.set(qn('w:fmt'), 'decimal')
+        pgNumType.set(qn('w:start'), '1')
+        
+        print("  页码修复: 已设置起始页码为1")
+        self.report.add_fix("PAGE_NUM", 0, "修复页码从1开始", success=True)
+    
+    def fix_headers(self):
+        """修复页眉：奇偶页不同，奇数页为章节标题，偶数页为固定文本"""
+        from docx.oxml import OxmlElement
+        from docx.oxml.ns import qn
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+        from docx.shared import Pt
+        
+        # 开启奇偶页不同
+        self.doc.settings.odd_and_even_pages_header_footer = True
+        
+        # 查找第一章：使用 Heading 1 样式 且 文本包含"绪论"
+        chapter1_idx = None
+        for i, para in enumerate(self.doc.paragraphs):
+            text = para.text.strip()
+            # 检查是否为 Heading 1 样式，且文本包含"绪论"
+            if para.style and 'Heading 1' in para.style.name:
+                if '绪论' in text:
+                    chapter1_idx = i
+                    break
+        
+        if chapter1_idx is None:
+            print("  未找到'第一章'（Heading 1 + 绪论），跳过页眉修复")
+            return
+        
+        # 获取正文部分的section（通常是第二个section，因为第一个是封面到目录）
+        sections = list(self.doc.sections)
+        if len(sections) > 1:
+            target_section = sections[1]  # 假设第一个是目录，第二个是正文
+        else:
+            target_section = sections[0]
+        
+        print("  设置页眉...")
+        
+        # 设置偶数页页眉
+        try:
+            even_header = target_section.even_page_header
+            
+            # 清空原有内容 - 删除所有段落
+            for p in list(even_header.paragraphs):
+                p_elem = p._element
+                p_elem.getparent().remove(p_elem)
+            
+            p = even_header.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            
+            run = p.add_run("北京大学硕士学位论文")
+            run.font.name = '宋体'
+            run.font.size = Pt(10.5)
+            
+            # 设置段落间距
+            p.paragraph_format.space_before = Pt(0)
+            p.paragraph_format.space_after = Pt(0)
+            
+            # 添加下划线（通过设置底部边框）
+            p_fmt = p._element.get_or_add_pPr()
+            pBdr = OxmlElement('w:pBdr')
+            bottom = OxmlElement('w:bottom')
+            bottom.set(qn('w:val'), 'single')
+            bottom.set(qn('w:sz'), '6')
+            bottom.set(qn('w:space'), '1')
+            bottom.set(qn('w:color'), '000000')
+            pBdr.append(bottom)
+            p_fmt.append(pBdr)
+            
+            print("    偶数页页眉: 北京大学硕士学位论文")
+        except Exception as e:
+            print(f"    警告: 偶数页页眉设置失败 - {e}")
+        
+        # 设置奇数页页眉（STYLEREF域）
+        try:
+            odd_header = target_section.header
+            
+            # 清空原有内容 - 删除所有段落
+            for p in list(odd_header.paragraphs):
+                p_elem = p._element
+                p_elem.getparent().remove(p_elem)
+            
+            p = odd_header.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            
+            # 创建域代码 run
+            run = p.add_run()
+            
+            # 开始域字符
+            fldChar1 = OxmlElement('w:fldChar')
+            fldChar1.set(qn('w:fldCharType'), 'begin')
+            run._r.append(fldChar1)
+            
+            # 域指令 - 使用 Heading 1 样式
+            instrText = OxmlElement('w:instrText')
+            instrText.set(qn('xml:space'), 'preserve')
+            instrText.text = ' STYLEREF "Heading 1" \\* MERGEFORMAT '
+            run._r.append(instrText)
+            
+            # 分隔符
+            fldChar2 = OxmlElement('w:fldChar')
+            fldChar2.set(qn('w:fldCharType'), 'separate')
+            run._r.append(fldChar2)
+            
+            # 结束域
+            fldChar3 = OxmlElement('w:fldChar')
+            fldChar3.set(qn('w:fldCharType'), 'end')
+            run._r.append(fldChar3)
+            
+            # 设置字体
+            run.font.name = '宋体'
+            run.font.size = Pt(10.5)
+            
+            # 设置段落间距和下划线
+            p.paragraph_format.space_before = Pt(0)
+            p.paragraph_format.space_after = Pt(0)
+            
+            p_fmt = p._element.get_or_add_pPr()
+            pBdr = OxmlElement('w:pBdr')
+            bottom = OxmlElement('w:bottom')
+            bottom.set(qn('w:val'), 'single')
+            bottom.set(qn('w:sz'), '6')
+            bottom.set(qn('w:space'), '1')
+            bottom.set(qn('w:color'), '000000')
+            pBdr.append(bottom)
+            p_fmt.append(pBdr)
+            
+            print("    奇数页页眉: STYLEREF Heading 1 (动态章标题)")
+        except Exception as e:
+            print(f"    警告: 奇数页页眉设置失败 - {e}")
+        
+        print("  页眉修复: 已设置奇偶页不同")
+        self.report.add_fix("HEADER", 0, "修复页眉奇偶页不同", success=True)
+    
+    def fix_chapter_tail_numbers(self):
+        """清理尾部章序号：通过XML方式禁用参考文献/附录/致谢的自动编号"""
+        from docx.oxml import OxmlElement
+        from docx.oxml.ns import qn
+        
+        print("  清理尾部章序号（XML方式）...")
+        
+        # 命名空间
+        NS = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+        
+        # 需要处理的标题文本
+        target_titles = ["参考文献", "致谢"]  # 附录可能带有子标题，单独处理
+        
+        count = 0
+        
+        # 查找所有 Heading 1 段落
+        for i, para in enumerate(self.doc.paragraphs):
+            style_name = para.style.name if para.style else ""
+            if 'Heading 1' not in style_name:
+                continue
+                
+            text = para.text.strip()
+            
+            # 检查是否是参考文献、附录或致谢（处理可能有空格的情况）
+            # 参考文献、附录、致谢的标题
+            is_target = False
+            # 移除所有空格后再比较
+            text_nospace = text.replace(' ', '').replace('\t', '')
+            if text_nospace == "参考文献":
+                is_target = True
+            elif text_nospace.startswith("附录"):
+                is_target = True
+            elif text_nospace.startswith("致谢"):
+                is_target = True
+            
+            if not is_target:
+                continue
+            
+            # 获取段落的XML元素
+            para_xml = para._element
+            
+            # 查找或创建 pPr 元素
+            pPr = para_xml.find('.//w:pPr', NS)
+            if pPr is None:
+                # 创建新的 pPr 元素
+                pPr = OxmlElement('w:pPr')
+                para_xml.insert(0, pPr)
+            
+            # 查找 numPr 元素
+            numPr = pPr.find('.//w:numPr', NS)
+            
+            if numPr is None:
+                # 创建 numPr 元素
+                numPr = OxmlElement('w:numPr')
+                pPr.append(numPr)
+            
+            # 查找或创建 numId 元素（值为0表示无编号）
+            numId = numPr.find('.//w:numId', NS)
+            if numId is None:
+                numId = OxmlElement('w:numId')
+                numPr.append(numId)
+            
+            # 设置 numId 为 0（禁用编号）
+            numId.set(qn('w:val'), '0')
+            
+            count += 1
+            print(f"    禁用编号: '{text}' (段落 {i})")
+            
+            # 如果是参考文献，在其之前插入分节符（使用无空格版本比较）
+            text_nospace = text.replace(' ', '').replace('\t', '')
+            if text_nospace == "参考文献":
+                try:
+                    self._insert_section_break_before_paragraph(i)
+                    print(f"    已插入分节符（参考文献前）")
+                except Exception as e:
+                    print(f"    插入分节符失败: {e}")
+        
+        if count > 0:
+            self.report.add_fix("CHAPTER_TAIL_NUM", count, "清理尾部章序号（XML方式）", success=True)
+            print(f"  尾部章序号清理完成: {count} 处")
+            
+            # 更新TOC（目录）中的条目
+            self._update_toc_entries()
+        else:
+            print("  无需清理尾部章序号")
+    
+    def _update_toc_entries(self):
+        """更新TOC中的参考文献、附录、致谢条目，移除章序号"""
+        import re
+        
+        print("  更新TOC条目...")
+        
+        NS = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+        
+        # 匹配TOC中的章序号模式：第X章 + 参考文献/附录/致谢 + 页码
+        # 更简单的模式：直接替换"第X章 "为空
+        # 注意：致谢可能是"致 谢"（中间有空格）
+        
+        count = 0
+        for para in self.doc.paragraphs:
+            style_name = para.style.name if para.style else ""
+            
+            # 只处理TOC样式
+            if 'toc' not in style_name.lower():
+                continue
+            
+            text = para.text.strip()
+            original_text = text
+            
+            # 检查是否以"第X章 "开头，后面跟着参考文献/附录/致谢/致 谢
+            import re
+            # 匹配第X章 参考文献/附录/致谢/致 谢（可能后面有内容）
+            # 使用 \s+ 来匹配空格或制表符
+            match = re.match(r'^(第[一二三四五六七八九十]+章\s+)(参考文献|附录|致\s?谢)', text)
+            if match:
+                # 提取标题部分（不含章序号），保留原始格式
+                title = match.group(2)
+                # 获取标题后面的所有内容（保持原样）
+                remaining = text[match.end():]
+                
+                # 重新构建：标题 + 剩余内容
+                new_text = title + remaining
+                
+                if original_text != new_text:
+                    # 更新文本
+                    for run in para.runs:
+                        run.text = ''
+                    if para.runs:
+                        para.runs[0].text = new_text
+                    else:
+                        para.add_run(new_text)
+                    count += 1
+                    print(f"    更新TOC: '{original_text[:35]}...' -> '{new_text[:35]}...'")
+        
+        if count > 0:
+            print(f"  TOC更新完成: {count} 处")
+    
+    def _insert_section_break_before_paragraph(self, para_index):
+        """在指定段落之前插入分节符（下一页）"""
+        from docx.oxml import OxmlElement
+        from docx.oxml.ns import qn
+        
+        # 获取目标段落元素
+        target_para = self.doc.paragraphs[para_index]
+        target_xml = target_para._element
+        
+        # 在目标段落之前插入一个新的空段落，包含分节符
+        # 创建一个新的p元素，包含分节符
+        new_p = OxmlElement('w:p')
+        
+        # 创建pPr元素
+        pPr = OxmlElement('w:pPr')
+        new_p.append(pPr)
+        
+        # 创建sectPr（分节符）
+        sectPr = OxmlElement('w:sectPr')
+        pPr.append(sectPr)
+        
+        # 设置为下一页分节符
+        type_elem = OxmlElement('w:type')
+        type_elem.set(qn('w:val'), 'nextPage')
+        sectPr.append(type_elem)
+        
+        # 获取父元素（通常是body）
+        body = target_xml.getparent()
+        
+        # 在目标段落之前插入
+        body.insert(list(body).index(target_xml), new_p)
+    
+    def fix_references_format(self):
+        """修复参考文献列表格式：英文标点 + 悬挂缩进2字符"""
+        from docx.shared import Pt
+        
+        print("  修复参考文献列表格式...")
+        
+        # 找到"参考文献"标题的位置
+        ref_start_idx = None
+        for i, para in enumerate(self.doc.paragraphs):
+            text = para.text.strip()
+            if text == "参考文献":
+                ref_start_idx = i
+                break
+        
+        if ref_start_idx is None:
+            print("    未找到'参考文献'标题，跳过")
+            return
+        
+        print(f"    找到'参考文献'在段落 {ref_start_idx}")
+        
+        # 修复参考文献段落
+        count_punct = 0
+        count_indent = 0
+        
+        # 标点替换映射
+        punct_map = {
+            '。': '.',
+            '，': ',',
+            '：': ':',
+            '；': ';',
+            '（': '(',
+            '）': ')',
+            '《': '"',
+            '》': '"',
+            '【': '[',
+            '】': ']'
+        }
+        
+        # 遍历参考文献后面的段落
+        for i in range(ref_start_idx + 1, len(self.doc.paragraphs)):
+            para = self.doc.paragraphs[i]
+            text = para.text.strip()
+            
+            # 遇到新的章节标题，停止处理
+            if para.style and 'Heading 1' in para.style.name:
+                break
+            
+            # 跳过空段落
+            if not text:
+                continue
+            
+            # 1. 标点替换
+            new_text = text
+            for cn_punct, en_punct in punct_map.items():
+                if cn_punct in new_text:
+                    new_text = new_text.replace(cn_punct, en_punct)
+                    count_punct += 1
+            
+            if new_text != text:
+                # 更新文本
+                for run in para.runs:
+                    run.text = ''
+                if para.runs:
+                    para.runs[0].text = new_text
+                else:
+                    para.add_run(new_text)
+            
+            # 2. 设置悬挂缩进 2 个中文字符
+            # 2个中文字符 ≈ 42磅 (21磅/字符)
+            try:
+                para_format = para.paragraph_format
+                para_format.first_line_indent = Pt(-21)  # 悬挂缩进
+                para_format.left_indent = Pt(21)        # 左缩进
+                count_indent += 1
+            except Exception as e:
+                pass  # 忽略格式设置错误
+        
+        print(f"    标点替换: {count_punct} 处")
+        print(f"    悬挂缩进设置: {count_indent} 处")
+        
+        if count_punct > 0 or count_indent > 0:
+            self.report.add_fix("REF_FORMAT", count_punct + count_indent, "修复参考文献格式", success=True)
+    
+    def fix_acknowledgments_punctuation(self):
+        """修复致谢标点：将半角逗号改为全角逗号"""
+        print("  修复致谢标点...")
+        
+        # 找到"致谢"标题的位置
+        ack_start_idx = None
+        for i, para in enumerate(self.doc.paragraphs):
+            text = para.text.strip()
+            if text == "致谢":
+                ack_start_idx = i
+                break
+        
+        if ack_start_idx is None:
+            print("    未找到'致谢'标题，跳过")
+            return
+        
+        print(f"    找到'致谢'在段落 {ack_start_idx}")
+        
+        count = 0
+        # 遍历致谢后面的段落
+        for i in range(ack_start_idx + 1, len(self.doc.paragraphs)):
+            para = self.doc.paragraphs[i]
+            text = para.text.strip()
+            
+            # 遇到新的章节标题，停止处理
+            if para.style and 'Heading 1' in para.style.name:
+                break
+            
+            # 跳过空段落
+            if not text:
+                continue
+            
+            # 替换半角逗号为全角逗号
+            if ',' in text:
+                new_text = text.replace(',', '，')
+                # 更新文本
+                for run in para.runs:
+                    run.text = ''
+                if para.runs:
+                    para.runs[0].text = new_text
+                else:
+                    para.add_run(new_text)
+                count += 1
+        
+        if count > 0:
+            self.report.add_fix("ACK_PUNCT", count, "修复致谢标点", success=True)
+            print(f"    致谢标点修复: {count} 处")
+        else:
+            print("    无需修复致谢标点")
+    
+    def fix_caption_colon(self):
+        """修复图表题注冒号：将'图 5.2:'或'表 3.1:'中的冒号替换为全角空格"""
+        import re
+        
+        print("  修复图表题注冒号...")
+        
+        # 正则匹配图表题注中的冒号
+        # 匹配: "图 X.X:" 或 "表 X.X:" 后面紧跟冒号的情况
+        pattern = r'(图\s*\d+\.\d+):'
+        pattern2 = r'(表\s*\d+\.\d+):'
+        
+        count = 0
+        for para in self.doc.paragraphs:
+            text = para.text
+            
+            # 检查是否包含图表编号+冒号
+            match = re.search(pattern, text) or re.search(pattern2, text)
+            if match:
+                # 替换冒号为全角空格
+                new_text = text.replace(':', ' ')
+                # 替换多个空格为单个全角空格
+                new_text = re.sub(r'\s+', ' ', new_text)
+                
+                if new_text != text:
+                    # 更新文本
+                    for run in para.runs:
+                        run.text = ''
+                    if para.runs:
+                        para.runs[0].text = new_text
+                    else:
+                        para.add_run(new_text)
+                    count += 1
+        
+        if count > 0:
+            self.report.add_fix("CAPTION_COLON", count, "修复图表题注冒号", success=True)
+            print(f"    图表题注冒号修复: {count} 处")
+        else:
+            print("    无需修复图表题注冒号")
+    
+    def fix_toc_levels(self):
+        """修复目录层级：将TOC显示级别从3级改为2级"""
+        import re
+        from docx.oxml.ns import qn
+        from docx.oxml import OxmlElement
+        
+        print("  修复目录层级...")
+        
+        # Step 1: 修改TOC域代码的显示级别
+        # 遍历文档底层所有的 <w:instrText> 节点
+        count = 0
+        for instrText in self.doc.element.xpath('//w:instrText'):
+            if instrText.text and 'TOC' in instrText.text:
+                original = instrText.text
+                # 将 \o "1-3" 或 \o "1-4" 等替换为 \o "1-2"
+                new_text = re.sub(r'\\o\s+"1-\d+"', r'\\o "1-2"', original)
+                if new_text != original:
+                    instrText.text = new_text
+                    count += 1
+                    print(f"    修改TOC域代码: {original} -> {new_text}")
+        
+        # Step 2: 强制Word在下次打开时提示更新域（包括目录）
+        settings = self.doc.settings.element
+        updateFields = settings.find(qn('w:updateFields'))
+        if updateFields is None:
+            updateFields = OxmlElement('w:updateFields')
+            settings.append(updateFields)
+        updateFields.set(qn('w:val'), 'true')
+        print("    已设置打开时自动更新域")
+        
+        if count > 0:
+            self.report.add_fix("TOC_LEVELS", count, "修复目录层级为2级", success=True)
+            print(f"    目录层级修复: {count} 处")
+        else:
+            print("    无需修复目录层级")
+    
+    def fix_references_and_citations(self):
+        """
+        修复正文引用格式和参考文献列表
+        Phase 1: 解析参考文献，建立映射字典
+        Phase 2: 遍历正文，替换上标引用
+        Phase 3: 参考文献清洗与分类排序
+        Phase 4: 重新写入并设置悬挂缩进
+        """
+        import re
+        from docx.shared import Pt
+        
+        print("  修复正文引用格式和参考文献列表...")
+        
+        # ========== Phase 1: 解析参考文献，建立映射字典 ==========
+        print("    Phase 1: 解析参考文献...")
+        
+        # 找到参考文献标题位置
+        ref_start_idx = None
+        for i, para in enumerate(self.doc.paragraphs):
+            text = para.text.strip().replace(' ', '')
+            if text == "参考文献":
+                ref_start_idx = i
+                break
+        
+        if ref_start_idx is None:
+            print("    未找到'参考文献'标题，跳过")
+            return
+        
+        # 提取参考文献段落（从参考文献标题之后到文档结尾，或到下一个章节标题之前）
+        ref_paragraphs = []
+        for i in range(ref_start_idx + 1, len(self.doc.paragraphs)):
+            para = self.doc.paragraphs[i]
+            text = para.text.strip()
+            # 跳过空段落
+            if not text:
+                continue
+            # 遇到新的章节标题（如"附录"或"致谢"），停止收集
+            if text.startswith("附录") or text.startswith("致谢"):
+                break
+            ref_paragraphs.append((i, para, text))
+        
+        print(f"    找到 {len(ref_paragraphs)} 条参考文献")
+        
+        # 建立映射字典: { "1": "（作者，年份）", "2": "（作者，年份）" }
+        ref_mapping = {}
+        for idx, (orig_idx, para, text) in enumerate(ref_paragraphs, start=1):
+            # 提取作者：段落开头到第一个标点符号
+            # 处理多种分隔符：. 。 , ，
+            author_match = re.match(r'^([^.。,，]+)[.。,]', text)
+            if author_match:
+                author = author_match.group(1).strip()
+            else:
+                # 如果没有分隔符，取前15个字符作为作者
+                author = text[:15].strip()
+            
+            # 处理英文作者：只取姓氏
+            # 判断是否包含英文字母
+            if re.search(r'[a-zA-Z]', author):
+                # 英文作者，尝试取姓氏
+                # 常见格式：Smith, J. 或 Smith John
+                if ',' in author:
+                    author = author.split(',')[0].strip()
+                else:
+                    # 取第一个空格前的部分作为姓氏
+                    parts = author.split()
+                    if parts:
+                        author = parts[0]
+            
+            # 提取年份：查找4位数年份
+            year_match = re.search(r'(19\d{2}|20\d{2})', text)
+            if year_match:
+                year = year_match.group(1)
+            else:
+                year = "n.d."
+            
+            # 多个作者的情况：只取第一个
+            if ';' in author:
+                author = author.split(';')[0].strip() + "等"
+            elif ',' in author and not re.search(r'[a-zA-Z]', author):
+                author = author.split(',')[0].strip() + "等"
+            elif '&' in author:
+                author = author.split('&')[0].strip() + "等"
+            
+            # 存储映射
+            ref_mapping[str(idx)] = f"（{author}，{year}）"
+            print(f"      [{idx}] {author}, {year}")
+        
+        # ========== Phase 2: 遍历正文，替换上标引用 ==========
+        print("    Phase 2: 替换正文引用...")
+        
+        # 遍历参考文献标题之前的所有段落
+        replace_count = 0
+        
+        # 首先，对所有段落清除可能存在的上标格式
+        # 这样可以处理跨Run的引用
+        for i in range(ref_start_idx):
+            para = self.doc.paragraphs[i]
+            for run in para.runs:
+                run.font.superscript = False
+        
+        # 然后进行替换
+        for i in range(ref_start_idx):
+            para = self.doc.paragraphs[i]
+            
+            # 更安全的替换策略：先合并段落中所有Run的文本
+            # 检查段落中是否包含 [数字] 引用
+            para_text = para.text
+            ref_pattern = r'\[(\d+)\]'
+            
+            if not re.search(ref_pattern, para_text):
+                continue
+            
+            # 收集所有Run的文本并合并
+            full_text = ''.join(run.text for run in para.runs)
+            
+            # 查找所有匹配
+            matches = list(re.finditer(ref_pattern, full_text))
+            
+            if not matches:
+                continue
+            
+            # 从后向前替换（保持位置索引有效）
+            for match in reversed(matches):
+                ref_num = match.group(1)
+                
+                if ref_num in ref_mapping:
+                    replacement = ref_mapping[ref_num]
+                    
+                    # 替换文本
+                    new_text = full_text[:match.start()] + replacement + full_text[match.end():]
+                    
+                    # 清空所有Run并清除格式
+                    for run in para.runs:
+                        run.text = ''
+                        run.font.bold = False
+                        run.font.italic = False
+                        run.font.underline = False
+                        run.font.superscript = False
+                        run.font.subscript = False
+                    
+                    # 将新文本写入第一个Run（现在没有格式了）
+                    if para.runs:
+                        para.runs[0].text = new_text
+                    else:
+                        para.add_run(new_text)
+                    
+                    replace_count += 1
+                    print(f"        替换 [{ref_num}] -> {replacement}")
+                    
+                    # 更新full_text以进行下一次替换
+                    full_text = new_text
+        
+        print(f"    正文引用替换: {replace_count} 处")
+        
+        # ========== Phase 3: 参考文献清洗与分类排序 ==========
+        print("    Phase 3: 参考文献清洗与分类排序...")
+        
+        # 提取所有参考文献文本
+        ref_texts = [text for _, _, text in ref_paragraphs]
+        
+        # 标点清洗
+        cleaned_refs = []
+        for text in ref_texts:
+            # 中文标点 -> 英文标点 + 空格
+            text = text.replace('。', '. ')
+            text = text.replace('：', ': ')
+            text = text.replace('，', ', ')
+            text = text.replace('；', '; ')
+            text = text.replace('（', '(')
+            text = text.replace('）', ') ')
+            
+            # 清理多余空格
+            text = re.sub(r'\s+', ' ', text).strip()
+            # 修复括号后的空格问题
+            text = re.sub(r'\)\s+', ')', text)
+            
+            cleaned_refs.append(text)
+        
+        # 语种分类
+        chinese_refs = []
+        english_refs = []
+        
+        for ref in cleaned_refs:
+            # 判断是否包含中文字符
+            if re.search(r'[\u4e00-\u9fa5]', ref):
+                chinese_refs.append(ref)
+            else:
+                english_refs.append(ref)
+        
+        print(f"    中文文献: {len(chinese_refs)} 篇")
+        print(f"    英文文献: {len(english_refs)} 篇")
+        
+        # 排序
+        chinese_refs.sort()
+        english_refs.sort()
+        
+        # 合并：中文在前，英文在后
+        sorted_refs = chinese_refs + english_refs
+        
+        print(f"    排序后共 {len(sorted_refs)} 篇")
+        
+        # ========== Phase 4: 重新写入并设置悬挂缩进 ==========
+        print("    Phase 4: 重新写入参考文献...")
+        
+        # 删除旧的参考文献段落
+        for orig_idx, para, text in ref_paragraphs:
+            # 清空段落内容
+            for run in para.runs:
+                run.text = ''
+        
+        # 获取参考文献标题段落
+        ref_title_para = self.doc.paragraphs[ref_start_idx]
+        
+        # 在参考文献标题后插入新段落
+        # 首先删除参考文献标题之后的所有段落，然后重新插入
+        # 更简单的方法：直接在现有段落上更新文本
+        
+        # 更新参考文献标题的下一个段落开始
+        insert_idx = ref_start_idx + 1
+        
+        for i, ref_text in enumerate(sorted_refs):
+            if insert_idx + i < len(self.doc.paragraphs):
+                # 更新现有段落
+                para = self.doc.paragraphs[insert_idx + i]
+                for run in para.runs:
+                    run.text = ''
+                if para.runs:
+                    para.runs[0].text = ref_text
+                else:
+                    para.add_run(ref_text)
+            else:
+                # 创建新段落
+                new_para = self.doc.add_paragraph(ref_text)
+                # 设置样式为 Normal
+                new_para.style = 'Normal'
+            
+            # 设置悬挂缩进格式
+            if insert_idx + i < len(self.doc.paragraphs):
+                para = self.doc.paragraphs[insert_idx + i]
+                
+                # 设置字体：分别设置中英文字体
+                for run in para.runs:
+                    # 检查是否包含中文
+                    if re.search(r'[\u4e00-\u9fa5]', run.text):
+                        run.font.name = '宋体'  # 中文宋体
+                    else:
+                        run.font.name = 'Times New Roman'  # 英文
+                    run.font.size = Pt(10.5)  # 五号
+                
+                # 设置行距：固定值 16 磅
+                para.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
+                para.paragraph_format.line_spacing = Pt(16)  # 固定值 16 磅
+                para.paragraph_format.space_before = Pt(3)   # 段前 3 磅
+                para.paragraph_format.space_after = Pt(0)    # 段后 0 磅
+                
+                # 悬挂缩进：左侧缩进 2 字符，首行凸出 2 字符
+                para.paragraph_format.left_indent = Pt(21)       # 左侧缩进 2 字符
+                para.paragraph_format.first_line_indent = Pt(-21) # 首行凸出 2 字符
+        
+        self.report.add_fix("REF_CITATIONS", replace_count, "正文引用格式和参考文献列表修复", success=True)
+        print(f"    参考文献修复完成!")
+    
     def fix_all(self, output_path: Optional[str] = None) -> Tuple[str, FixReport]:
         """
         修复所有问题
@@ -140,6 +1097,22 @@ class DocxAutoFixer:
         self._fix_paragraph_styles()
         self._fix_text_format()
         
+        # 修复页码和页眉
+        self.fix_page_numbers()
+        self.fix_headers()
+        
+        # 修复尾部格式问题
+        self.fix_chapter_tail_numbers()
+        self.fix_references_format()
+        self.fix_acknowledgments_punctuation()
+        self.fix_caption_colon()
+        
+        # 修复正文引用格式和参考文献列表（核心逻辑）
+        self.fix_references_and_citations()
+        
+        # 修复目录层级（显示到2级）
+        self.fix_toc_levels()
+        
         # 保存文档
         self.doc.save(output_path)
         
@@ -147,6 +1120,9 @@ class DocxAutoFixer:
     
     def _fix_paragraph_styles(self):
         """修复段落样式 - 优化版：按zone分组修复，避免重复"""
+        # 修复标题编号样式（自动编号末尾的点）
+        self.fix_heading_numbering_style()
+        
         # 按zone分组规则
         zone_rules = {}
         style_rules = [r for r in self.rules if r.get("check_type") == "paragraph_style"]
@@ -339,6 +1315,24 @@ class DocxAutoFixer:
         
         # 修复PPT符号
         self._fix_ppt_symbols()
+        
+        # 修复参考文献格式
+        self._fix_reference_format()
+        
+        # 修复图表编号格式
+        self._fix_figure_numbering()
+        
+        # 修复节标题格式
+        self._fix_heading_format()
+        
+        # 修复英文摘要关键词分隔符
+        self._fix_english_keyword_separators()
+        
+        # 修复目录层级
+        self._fix_table_of_contents()
+        
+        # 删除尾部空白页
+        self._fix_trailing_blank_pages()
     
     def _fix_keyword_separators(self):
         """修复关键词分隔符：将分号替换为逗号"""
@@ -445,6 +1439,353 @@ class DocxAutoFixer:
                     "移除PPT符号",
                     success=True
                 )
+    
+    def _fix_reference_format(self):
+        """修复参考文献格式：去除数字序号、转换中文标点为英文标点、设置字体字号缩进行距"""
+        from docx.shared import Pt, Cm
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+        
+        # 查找参考文献区域的段落
+        ref_keywords = ["参考文献", "References", "REFERENCE"]
+        
+        in_reference_section = False
+        ref_para_count = 0  # 统计参考文献段落数
+        
+        for para_idx, para in enumerate(self.doc.paragraphs):
+            text = para.text.strip()
+            
+            # 检测参考文献区域开始 - 不依赖于段落样式
+            # 直接检查文本是否匹配参考文献标题（无论是Normal样式还是Heading样式）
+            for kw in ref_keywords:
+                if text == kw:  # 精确匹配标题
+                    in_reference_section = True
+                    continue
+            
+            if not in_reference_section or not text:
+                continue
+            
+            # 跳过参考文献标题
+            if text == "参考文献" or text == "References":
+                continue
+            
+            ref_para_count += 1
+            original = text
+            
+            # 修复1：去除参考文献开头的数字序号 [1] 
+            # 修复正则表达式的转义问题
+            text = re.sub(r'^\[\s*\d+\s*\]', '', text)
+            text = re.sub(r'^\d+\.\s*', '', text)  # 去除开头的 "1. "
+            
+            # 修复2：转换中文标点为英文标点（仅在参考文献区域）
+            # 中文逗号 -> 英文逗号
+            text = text.replace('，', ',')
+            # 中文分号 -> 英文分号
+            text = text.replace('；', ';')
+            # 注意：中文句号和冒号不替换，保留中文标点
+            
+            # 如果有变化，更新段落
+            if text != original:
+                if para.runs:
+                    first_run = para.runs[0]
+                    para.clear()
+                    new_run = para.add_run(text)
+                    new_run.font.name = first_run.font.name
+                    new_run.font.size = first_run.font.size
+                else:
+                    para.clear()
+                    para.add_run(text)
+                
+                self.report.add_fix(
+                    "REF_FORMAT",
+                    para_idx,
+                    "修复参考文献格式：去除序号/转换标点",
+                    success=True
+                )
+            
+            # 修复3：设置字体（宋体 + Times New Roman）
+            font_fixes = []
+            for run in para.runs:
+                if run.text.strip():
+                    # 设置中文字体 - 使用 rPr 中的 rFonts
+                    try:
+                        rFonts = run._element.get_or_add_rPr().get_or_add_rFonts()
+                        # 设置中文字体
+                        rFonts.set(qn('w:eastAsia'), '宋体')
+                        # 设置英文字体
+                        rFonts.set(qn('w:ascii'), 'Times New Roman')
+                        rFonts.set(qn('w:hAnsi'), 'Times New Roman')
+                        font_fixes.append('字体改为宋体/Times New Roman')
+                    except Exception:
+                        pass
+            
+            # 修复4：设置字号（五号 = 10.5pt）
+            for run in para.runs:
+                if run.text.strip() and run.font.size:
+                    if abs(run.font.size.pt - 10.5) > 0.1:  # 允许微小误差
+                        run.font.size = Pt(10.5)
+                        font_fixes.append('字号改为10.5pt')
+            
+            # 修复5：设置悬挂缩进（2字符）
+            # 2字符 ≈ 1.48cm (根据Word标准)
+            hanging_indent_cm = 1.48  # 2字符悬挂缩进
+            current_left_indent = para.paragraph_format.left_indent
+            
+            needs_indent_fix = True
+            if current_left_indent is not None:
+                current_cm = utils.emu_to_cm(abs(current_left_indent))
+                if abs(current_cm - hanging_indent_cm) < 0.1:
+                    needs_indent_fix = False
+            
+            if needs_indent_fix:
+                para.paragraph_format.left_indent = Cm(hanging_indent_cm)
+                # 悬挂缩进：首行不缩进，左缩进2字符
+                para.paragraph_format.first_line_indent = Cm(0)
+                font_fixes.append(f'左缩进改为{hanging_indent_cm}cm（悬挂2字符）')
+            
+            # 修复6：设置行距（16磅）
+            line_spacing_fixed = False
+            try:
+                from docx.enum.text import WD_LINE_SPACING
+                if para.paragraph_format.line_spacing_rule is None or \
+                   para.paragraph_format.line_spacing_rule != WD_LINE_SPACING.EXACTLY:
+                    para.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
+                    line_spacing_fixed = True
+                elif para.paragraph_format.line_spacing:
+                    current_pt = utils.emu_to_pt(para.paragraph_format.line_spacing)
+                    if abs(current_pt - 16) > 1:  # 允许1磅误差
+                        line_spacing_fixed = True
+                
+                if line_spacing_fixed:
+                    para.paragraph_format.line_spacing = Pt(16)
+                    font_fixes.append('行距改为16磅')
+            except Exception:
+                pass
+            
+            # 修复7：设置段前段后间距（段前3磅，段后0磅）
+            if para.paragraph_format.space_before is None or \
+               abs(para.paragraph_format.space_before.pt - 3) > 0.5:
+                para.paragraph_format.space_before = Pt(3)
+                font_fixes.append('段前改为3磅')
+            
+            if para.paragraph_format.space_after is None or \
+               abs(para.paragraph_format.space_after.pt - 0) > 0.5:
+                para.paragraph_format.space_after = Pt(0)
+                font_fixes.append('段后改为0磅')
+            
+            # 记录修复
+            if font_fixes:
+                self.report.add_fix(
+                    "REF_FORMAT",
+                    para_idx,
+                    "; ".join(font_fixes),
+                    success=True
+                )
+        
+        # 打印统计信息
+        if ref_para_count > 0:
+            print(f"  参考文献段落修复：共 {ref_para_count} 个条目")
+    
+    def _fix_figure_numbering(self):
+        """修复图表编号格式：将连字符格式 3-1 改为小数点格式 3.1"""
+        # 查找所有段落，检查图表题注
+        figure_patterns = [
+            r'(图|表|表|图)\s*(\d+)-(\d+)',  # 匹配 "图 3-1" 或 "表 2-1"
+        ]
+        
+        for para_idx, para in enumerate(self.doc.paragraphs):
+            text = para.text.strip()
+            if not text:
+                continue
+            
+            original = text
+            
+            # 修复图表编号中的连字符为小数点
+            # 匹配 "图 3-1" -> "图 3.1"
+            text = re.sub(r'(图|表)\s*(\d+)-(\d+)', r'\1 \2.\3', text)
+            
+            if text != original:
+                if para.runs:
+                    first_run = para.runs[0]
+                    para.clear()
+                    new_run = para.add_run(text)
+                    new_run.font.name = first_run.font.name
+                    new_run.font.size = first_run.font.size
+                
+                self.report.add_fix(
+                    "FIG_NUM",
+                    para_idx,
+                    "修复图表编号格式：3-1 -> 3.1",
+                    success=True
+                )
+    
+    def _fix_heading_format(self):
+        """修复节标题格式：去除多余小数点和章节前缀"""
+        for para_idx, para in enumerate(self.doc.paragraphs):
+            text = para.text.strip()
+            if not text:
+                continue
+            
+            original = text
+            
+            # 修复1：去除多余的小数点（如 1..1 或 1.1.）
+            # 匹配连续的小数点
+            text = re.sub(r'(\d+)\.(\d+)\.\.+', r'\1.\2', text)
+            
+            # 修复：处理 "1.1. 研究背景" -> "1.1 研究背景"
+            # 处理任意级别的小数点（1.1.、1.1.1.、1.1.1.1.等）
+            # 匹配: 数字.数字(.数字)*.空格
+            # 替换: 去掉最后一个点
+            text = re.sub(r'^(\d+(?:\.\d+)*)\.(\s)', r'\1\2', text)
+            
+            text = re.sub(r'(\d+)\.$', r'\1', text)  # 去除尾部多余的小数点
+            
+            # 修复2：去除非首章的"第X章"前缀（仅对2-10章有效）
+            # 匹配 "第2章 1.1" 格式并转换为 "1.1"
+            text = re.sub(r'^第[二三四五六七八九十]+章\s+(\d+\.\d+)', r'\1', text)
+            
+            if text != original:
+                if para.runs:
+                    first_run = para.runs[0]
+                    para.clear()
+                    new_run = para.add_run(text)
+                    new_run.font.name = first_run.font.name
+                    new_run.font.size = first_run.font.size
+                
+                self.report.add_fix(
+                    "HEADING_FORMAT",
+                    para_idx,
+                    "修复节标题格式",
+                    success=True
+                )
+    
+    def _fix_english_keyword_separators(self):
+        """修复英文摘要关键词分隔符：将分号替换为逗号"""
+        # 查找英文摘要区域的段落
+        in_abstract_en = False
+        
+        for para_idx, para in enumerate(self.doc.paragraphs):
+            text = para.text.strip()
+            text_lower = text.lower()
+            
+            # 检测英文摘要区域开始：包括"ABSTRACT"标题和"KEY WORDS"标题
+            if "abstract" in text_lower:
+                if len(text) < 30:  # 标题行
+                    in_abstract_en = True
+            
+            # 如果段落以"KEY WORDS"开头（可能是标题+内容在同一行）
+            if text_lower.startswith("key words"):
+                in_abstract_en = True
+            
+            if not in_abstract_en:
+                continue
+            
+            # 查找包含关键词的行 (Keywords: xxx; xxx; xxx 或 KEY WORDS: xxx; xxx; xxx)
+            if ("keyword" in text_lower or "key word" in text_lower) and (";" in text or ":" in text):
+                original = text
+                
+                # 替换分号为逗号（英文分号 ;）
+                text = text.replace(';', ',')
+                
+                # 清理多余的逗号
+                while ',,' in text:
+                    text = text.replace(',,', ',')
+                
+                # 清理开头和结尾的逗号
+                if text.startswith(','):
+                    text = text[1:].strip()
+                if text.endswith(','):
+                    text = text[:-1].strip()
+                
+                if text != original:
+                    if para.runs:
+                        first_run = para.runs[0]
+                        para.clear()
+                        new_run = para.add_run(text)
+                        new_run.font.name = first_run.font.name
+                        new_run.font.size = first_run.font.size
+                    
+                    self.report.add_fix(
+                        "EN_KEYWORD_SEP",
+                        para_idx,
+                        "英文关键词分隔符从分号改为逗号",
+                        success=True
+                    )
+    
+    def _fix_table_of_contents(self):
+        """修复目录层级：只显示1-2级标题"""
+        # 遍历所有段落，查找目录
+        # 目录在python-docx中通常是隐式标记的
+        
+        # 方案：找到目录段落，检查其层级设置
+        # 如果目录显示超过2级，则重新生成
+        
+        # 注意：python-docx对目录的支持有限
+        # 这里我们通过检查目录的样式来判断是否需要修复
+        
+        toc_fixed = False
+        
+        # 遍历所有段落，查找类似目录的文本
+        for para_idx, para in enumerate(self.doc.paragraphs):
+            text = para.text.strip()
+            
+            # 检查是否是目录标题
+            if "目 录" in text or "目录" in text:
+                # 这是一个目录标题
+                # 检查下一个段落是否是目录内容
+                if para_idx + 1 < len(self.doc.paragraphs):
+                    next_para = self.doc.paragraphs[para_idx + 1]
+                    next_text = next_para.text.strip()
+                    
+                    # 如果目录包含超过2级的标题，尝试修复
+                    # 这里我们做一个标记，实际修复需要用户手动调整目录显示级别
+                    # 或者我们可以尝试删除旧目录并插入新的2级目录
+                    
+                    # 由于python-docx对目录操作有限，我们这里记录问题
+                    self.report.add_fix(
+                        "TOC_LEVEL",
+                        para_idx,
+                        "目录显示层级需手动调整：设置为显示1-2级标题",
+                        success=False  # 标记为需要手动处理
+                    )
+                    toc_fixed = True
+                    break
+        
+        return toc_fixed
+    
+    def _fix_trailing_blank_pages(self):
+        """删除末尾多余的空白段落"""
+        # 从后往前遍历，删除空白段落
+        blank_count = 0
+        
+        # 获取所有段落
+        paragraphs = self.doc.paragraphs
+        
+        # 从最后一个段落开始往前遍历
+        for i in range(len(paragraphs) - 1, -1, -1):
+            para = paragraphs[i]
+            text = para.text.strip()
+            
+            # 如果是完全空白的段落，或者是只有换行符的段落
+            if not text or text == '' or text == '\n':
+                # 删除这个段落
+                # python-docx中，段落不能直接删除，需要从父元素中移除
+                p_elem = para._element
+                p_elem.getparent().remove(p_elem)
+                blank_count += 1
+            else:
+                # 遇到第一个非空段落就停止
+                break
+        
+        if blank_count > 0:
+            self.report.add_fix(
+                "TRAILING_BLANK",
+                len(paragraphs),
+                f"删除末尾 {blank_count} 个空白段落",
+                success=True
+            )
+            return True
+        
+        return False
     
     def _contains_chinese(self, text: str) -> bool:
         """检查文本是否包含中文字符"""

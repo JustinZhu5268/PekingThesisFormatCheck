@@ -2542,6 +2542,29 @@
   {
     "rule_id": "MISC_23",
     "md_source": "十四、参考文献格式",
+    "md_source_key": "十四、参考文献格式::正文引用格式",
+    "element_name": "正文引用格式",
+    "format_requirement": "正文引用使用\"著者-出版年制\"格式，不使用上标数字如[1][2]",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\[\\d+\\]",
+      "match_mode": "must_not_match",
+      "scope": "body_text"
+    },
+    "detection_method": "正则匹配`\\[\\d+\\]`检测正文中的上标数字引用",
+    "error_message": "正文引用格式不符：正文引用应使用\"著者-出版年制\"格式（如：（PAULY，1968）），不应使用上标数字如[1][2]",
+    "enabled": true,
+    "_comment": "正文引用格式检查"
+  },
+  {
+    "md_source": "十四、参考文献格式",
     "md_source_key": "十四、参考文献格式::著录方法",
     "element_name": "著录方法",
     "format_requirement": "\"著者-出版年制\"：著者姓氏与出版年置于\"（）\"内，放在引用句子末尾",
@@ -2760,15 +2783,16 @@
       "references"
     ],
     "engine": "Python",
-    "check_type": "skip",
+    "check_type": "paragraph_style",
     "conditions": {
       "space_before_pt": 3,
-      "space_after_pt": 0
+      "space_after_pt": 0,
+      "line_spacing_value": 16
     },
-    "detection_method": "段落间距检测",
+    "detection_method": "段落间距检测（16磅行距，段前3磅，段后0磅）",
     "error_message": "行距格式不符：16磅行距，段前3磅，段后0磅",
     "enabled": true,
-    "_comment": "英美拼写 - 需人工判断"
+    "_comment": "参考文献行距检测已启用"
   },
   {
     "rule_id": "MISC_33",
@@ -2783,12 +2807,16 @@
       "references"
     ],
     "engine": "Python",
-    "check_type": "skip",
-    "conditions": {},
-    "detection_method": "段落开头数字检测（应无）",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^\\[\\s*\\d+\\s*\\]|^\\d+\\.\\s*",
+      "match_mode": "must_not_match",
+      "scope": "full_text"
+    },
+    "detection_method": "正则匹配段落开头数字序号",
     "error_message": "序号格式不符：每条文献**不加序号**",
     "enabled": true,
-    "_comment": "外文人名翻译 - 需人工判断"
+    "_comment": "参考文献序号检测已启用"
   },
   {
     "rule_id": "MISC_34",
@@ -2803,12 +2831,14 @@
       "references"
     ],
     "engine": "Python",
-    "check_type": "skip",
-    "conditions": {},
+    "check_type": "paragraph_style",
+    "conditions": {
+      "hanging_indent_char": 2
+    },
     "detection_method": "悬挂缩进检测（1.48cm）",
     "error_message": "缩进格式不符：悬挂缩进2汉字符",
     "enabled": true,
-    "_comment": "外文地名翻译 - 需人工判断"
+    "_comment": "参考文献悬挂缩进检测已启用"
   },
   {
     "rule_id": "MISC_35",
@@ -4092,5 +4122,149 @@
     "error_message": "【重要】关键词分隔符错误：必须使用中文逗号'，'分隔，不能使用分号'；'！\n当前检测到：关键词使用了分号分隔，请改为中文逗号",
     "enabled": true,
     "_comment": "检测中文摘要关键词是否使用正确的分隔符（逗号而非分号）"
+  },
+  {
+    "rule_id": "REF_LIST_01",
+    "md_source": "人工添加",
+    "md_source_key": "人工添加::REF_LIST_01",
+    "element_name": "参考文献数字序号",
+    "format_requirement": "参考文献列表不应包含数字序号 [1] 或 [1] 格式",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "\\[\\d+\\]",
+      "match_mode": "must_not_match",
+      "scope": "full_text"
+    },
+    "detection_method": "正则匹配检测方括号数字",
+    "error_message": "参考文献列表格式错误：不应包含数字序号 [1] 格式，应为纯文本列表",
+    "enabled": true,
+    "_comment": "参考文献不应有数字序号"
+  },
+  {
+    "rule_id": "REF_LIST_02",
+    "md_source": "人工添加",
+    "md_source_key": "人工添加::REF_LIST_02",
+    "element_name": "参考文献中英文混排",
+    "format_requirement": "参考文献应按中英文分类，中文在前，英文在后，不应混排",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[\\u4e00-\\u9fff].*\\[?[a-zA-Z]",
+      "match_mode": "must_not_match",
+      "scope": "full_text"
+    },
+    "detection_method": "正则匹配检测中英文混排",
+    "error_message": "参考文献列表格式错误：中英文参考文献不应混排，应分类排列",
+    "enabled": true,
+    "_comment": "参考文献中英文不应混排"
+  },
+  {
+    "rule_id": "REF_LIST_03",
+    "md_source": "人工添加",
+    "md_source_key": "人工添加::REF_LIST_03",
+    "element_name": "参考文献标点格式",
+    "format_requirement": "参考文献标点应为英文格式（., : ;）而非中文格式（。，：；）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group5_References",
+    "target_zone": [
+      "references"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[，。；：]",
+      "match_mode": "must_not_match",
+      "scope": "full_text"
+    },
+    "detection_method": "正则匹配检测中文标点",
+    "error_message": "参考文献列表格式错误：标点应为英文格式（., : ;），不应使用中文标点（。，：；）",
+    "enabled": true,
+    "_comment": "参考文献应使用英文标点"
+  },
+  {
+    "rule_id": "FIG_NUM_01",
+    "md_source": "人工添加",
+    "md_source_key": "人工添加::FIG_NUM_01",
+    "element_name": "图表编号连字符",
+    "format_requirement": "图表编号应使用小数点格式（如3.1）而非连字符格式（如3-1）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group3_Figures",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "[图表]\\s*\\d+-\\d+",
+      "match_mode": "must_not_match",
+      "scope": "caption"
+    },
+    "detection_method": "正则匹配检测图、表编号中的连字符",
+    "error_message": "图表编号格式错误：应使用小数点格式（如3.1）而非连字符格式（如3-1）",
+    "enabled": true,
+    "_comment": "图表编号应为小数点格式"
+  },
+  {
+    "rule_id": "HEADING_01",
+    "md_source": "人工添加",
+    "md_source_key": "人工添加::HEADING_01",
+    "element_name": "节标题多余小数点",
+    "format_requirement": "节标题不应包含多余的小数点（如1..1或1.1.）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^\\d+(?:\\.\\d+)+\\.\\s",
+      "match_mode": "must_not_match",
+      "scope": "heading"
+    },
+    "detection_method": "正则匹配检测多余小数点",
+    "error_message": "节标题格式错误：不应包含多余的小数点",
+    "enabled": true,
+    "_comment": "节标题不应有多余小数点"
+  },
+  {
+    "rule_id": "HEADING_02",
+    "md_source": "人工添加",
+    "md_source_key": "人工添加::HEADING_02",
+    "element_name": "节标题章节序号",
+    "format_requirement": "非首章不应有'第X章'前缀，应直接使用编号（如1.1, 2.1）",
+    "automation_level": "auto",
+    "urgency": "★★★★★",
+    "target_group": "Group2_Paragraphs",
+    "target_zone": [
+      "body_chapter"
+    ],
+    "engine": "Python",
+    "check_type": "regex_match",
+    "conditions": {
+      "pattern": "^[第](?!一|二|三|四|五|六|七|八|九|十)[一二三四五六七八九十]+章\\s+\\d+",
+      "match_mode": "must_not_match",
+      "scope": "heading"
+    },
+    "detection_method": "正则匹配检测非首章的章节前缀",
+    "error_message": "节标题格式错误：非首章不应有'第X章'前缀",
+    "enabled": true,
+    "_comment": "节标题不应有章节序号前缀"
   }
 ]
