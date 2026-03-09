@@ -194,271 +194,259 @@ class DocxAutoFixer:
             print(f"  警告: 编号样式修复失败 - {e}")
     
     def fix_document_zones_and_headers(self):
-        """
-        统一重塑文档的节结构、页码和页眉页脚（三区隔离法）
-        
-        Zone 1: 封面与声明区 (无页眉、无页脚、无页码)
-        Zone 2: 摘要目录区 (罗马数字页码)
-        Zone 3: 第一章至文末 (阿拉伯数字页码)
-        """
+        """终极版：统一重塑文档的节结构、页码和页眉页脚（带防火墙的三区隔离法）"""
         from docx.oxml import OxmlElement
         from docx.oxml.ns import qn
-        from docx.enum.text import WD_ALIGN_PARAGRAPH
         from docx.shared import Pt
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
         
-        print("  执行三区隔离法（修复页眉页脚）...")
+        print("  执行带防火墙的三区隔离法...")
         
-        # 1. 扫描全文，定位分界点
-        abstract_sec_idx = 1  # 默认摘要从第2节开始
-        body_sec_idx = 2      # 默认第一章从第3节开始
+        # ==========================================
+        # 1. 智能扫描：带"防火墙"的区域识别
+        # ==========================================
+        section_map = {}  # sec_idx -> {'zone': 1/2/3, 'title': ''}
+        current_sec_idx = 0
+        found_toc = False
         
-        # 查找"摘要"和"第一章"的位置
-        for i, para in enumerate(self.doc.paragraphs):
-            text = para.text.strip()
-            style_name = para.style.name if para.style else ""
+        for p in self.doc.paragraphs:
+            text = p.text.strip()
+            style = p.style.name if p.style else ""
             
-            if text == "摘要" and abstract_sec_idx == 1:
-                # 找到摘要，通过段落位置估算section索引
-                abstract_sec_idx = i // 50 + 1  # 粗略估算
-            if ('绪论' in text or (text.startswith('第') and '章' in text)) and body_sec_idx == 2:
-                if para.style and 'Heading 1' in style_name:
-                    body_sec_idx = i // 50 + 2  # 粗略估算
-                    break
+            if current_sec_idx not in section_map:
+                # 默认继承前一个区域的属性，除非被触发更改
+                prev_zone = section_map[current_sec_idx - 1]['zone'] if current_sec_idx > 0 else 1
+                section_map[current_sec_idx] = {'zone': prev_zone, 'title': ''}
+                
+            # 触发器 1：发现摘要，进入 Zone 2 (前置区)
+            if text in ["摘要", "ABSTRACT"] and not found_toc:
+                section_map[current_sec_idx]['zone'] = 2
+                if not section_map[current_sec_idx]['title']:
+                    section_map[current_sec_idx]['title'] = text
+                    
+            # 触发器 2：发现目录，标记防火墙
+            if text == "目录":
+                found_toc = True
+                section_map[current_sec_idx]['zone'] = 2
+                if not section_map[current_sec_idx]['title']:
+                    section_map[current_sec_idx]['title'] = "目录"
+                    
+            # 触发器 3：【关键】越过目录防火墙后，发现真正的一级标题，进入 Zone 3 (正文区)
+            if found_toc and (style in ['Heading 1', '标题 1'] or (text.startswith("第") and "章" in text)):
+                section_map[current_sec_idx]['zone'] = 3
+                if not section_map[current_sec_idx]['title']:
+                    section_map[current_sec_idx]['title'] = text
+                    
+            # 遇到分节符，进入下一个 Section
+            if p._element.xpath('.//w:sectPr'):
+                current_sec_idx += 1
         
-        print(f"    摘要区域: 节 {abstract_sec_idx}, 正文区域: 节 {body_sec_idx}")
-        
-        # 2. 开启全局奇偶页不同
+        print(f"    扫描到 {len(section_map)} 个区域: {section_map}")
+
+        # ==========================================
+        # 2. 暴力清洗与重建引擎
+        # ==========================================
         self.doc.settings.odd_and_even_pages_header_footer = True
         
-        # 3. 遍历所有 Section 进行三区隔离处理
-        sections = list(self.doc.sections)
+        zone2_first_sec = True
+        zone3_first_sec = True
         
-        for i, section in enumerate(sections):
-            # 彻底切断与上一节的联系
-            section.header.is_linked_to_previous = False
-            section.footer.is_linked_to_previous = False
-            try:
-                section.even_page_header.is_linked_to_previous = False
-                section.even_page_footer.is_linked_to_previous = False
-            except:
-                pass
-            
+        for i, section in enumerate(self.doc.sections):
+            if i not in section_map:
+                continue
+                
+            zone = section_map[i]['zone']
+            title = section_map[i]['title']
             sectPr = section._sectPr
             
-            # ==========================================
-            # Zone 1: 封面与声明区 (无页眉、无页脚、无页码)
-            # ==========================================
-            if i < abstract_sec_idx:
-                # 清空页眉
-                for p in list(section.header.paragraphs):
-                    p._element.getparent().remove(p._element)
-                try:
-                    for p in list(section.even_page_header.paragraphs):
-                        p._element.getparent().remove(p._element)
-                except:
-                    pass
-                
-                # 清空页脚
-                for p in list(section.footer.paragraphs):
-                    p._element.getparent().remove(p._element)
-                try:
-                    for p in list(section.even_page_footer.paragraphs):
-                        p._element.getparent().remove(p._element)
-                except:
-                    pass
-                
-                # 移除页码设置
-                pgNumType = sectPr.find(qn('w:pgNumType'))
-                if pgNumType is not None:
-                    sectPr.remove(pgNumType)
-                
-                print(f"    节 {i}: Zone 1 (无页眉页脚)")
+            # 彻底切断与上一节的联系
+            section.header.is_linked_to_previous = False
+            section.even_page_header.is_linked_to_previous = False
+            section.footer.is_linked_to_previous = False
+            section.even_page_footer.is_linked_to_previous = False
             
-            # ==========================================
-            # Zone 2: 摘要目录区 (罗马数字)
-            # ==========================================
-            elif i < body_sec_idx:
-                # 设置页码为罗马数字
-                pgNumType = sectPr.find(qn('w:pgNumType'))
-                if pgNumType is None:
-                    pgNumType = OxmlElement('w:pgNumType')
-                    sectPr.append(pgNumType)
+            # 【核弹级清洗】：暴力清空所有页眉页脚的底层 XML (消灭 STYLEREF 和旧页码)
+            for hf in [section.header, section.even_page_header, section.footer, section.even_page_footer]:
+                hf_elem = hf._element
+                for child in list(hf_elem):
+                    hf_elem.remove(child)
+                hf_elem.append(OxmlElement('w:p'))  # 补回一个空段落防崩溃
                 
+            # 移除旧的页码类型设置
+            pgNumType = sectPr.find(qn('w:pgNumType'))
+            if pgNumType is not None:
+                sectPr.remove(pgNumType)
+
+            # ------------------------------------------
+            # Zone 1: 封面与声明 (绝对干净，无页眉页脚页码)
+            # ------------------------------------------
+            if zone == 1:
+                print(f"    节 {i}: Zone 1 (无页眉页脚页码)")
+                
+            # ------------------------------------------
+            # Zone 2: 摘要与目录 (罗马数字)
+            # ------------------------------------------
+            elif zone == 2:
+                pgNumType = OxmlElement('w:pgNumType')
                 pgNumType.set(qn('w:fmt'), 'upperRoman')
-                if i == abstract_sec_idx:
+                if zone2_first_sec:
                     pgNumType.set(qn('w:start'), '1')
                     # 强制奇数页分节，解决奇偶页翻转问题
-                    type_el = sectPr.find(qn('w:type'))
-                    if type_el is None:
-                        type_el = OxmlElement('w:type')
-                        sectPr.append(type_el)
+                    type_el = sectPr.get_or_add_type()
                     type_el.set(qn('w:val'), 'oddPage')
+                    zone2_first_sec = False
+                sectPr.append(pgNumType)
                 
-                # 设置偶数页页眉
-                self._set_section_even_header(section)
-                # 设置奇数页页眉
-                self._set_section_odd_header(section, "摘要")
+                self._write_header(section.header, title)
+                self._write_header(section.even_page_header, "北京大学硕士学位论文")
+                self._write_footer_page_num(section.footer)
+                self._write_footer_page_num(section.even_page_footer)
                 
-                print(f"    节 {i}: Zone 2 (罗马数字)")
-            
-            # ==========================================
-            # Zone 3: 第一章至文末 (阿拉伯数字)
-            # ==========================================
-            else:
-                # 设置页码为阿拉伯数字
-                pgNumType = sectPr.find(qn('w:pgNumType'))
-                if pgNumType is None:
-                    pgNumType = OxmlElement('w:pgNumType')
-                    sectPr.append(pgNumType)
-                
+                print(f"    节 {i}: Zone 2 - {title} (罗马数字)")
+
+            # ------------------------------------------
+            # Zone 3: 正文区 (阿拉伯数字)
+            # ------------------------------------------
+            elif zone == 3:
+                pgNumType = OxmlElement('w:pgNumType')
                 pgNumType.set(qn('w:fmt'), 'decimal')
-                if i == body_sec_idx:
+                if zone3_first_sec:
                     pgNumType.set(qn('w:start'), '1')
                     # 强制奇数页分节
-                    type_el = sectPr.find(qn('w:type'))
-                    if type_el is None:
-                        type_el = OxmlElement('w:type')
-                        sectPr.append(type_el)
+                    type_el = sectPr.get_or_add_type()
                     type_el.set(qn('w:val'), 'oddPage')
+                    zone3_first_sec = False
+                sectPr.append(pgNumType)
                 
-                # 设置偶数页页眉
-                self._set_section_even_header(section)
-                # 设置奇数页页眉 (动态STYLEREF)
-                self._set_section_odd_header_styleref(section)
+                # Zone 3 使用 STYLEREF 动态页眉
+                self._write_header_styleref(section.header)
+                self._write_header(section.even_page_header, "北京大学硕士学位论文")
+                self._write_footer_page_num(section.footer)
+                self._write_footer_page_num(section.even_page_footer)
                 
-                print(f"    节 {i}: Zone 3 (阿拉伯数字)")
-        
-        self.report.add_fix("ZONES_HEADER", 0, "三区隔离法修复页眉页脚", success=True)
+                print(f"    节 {i}: Zone 3 - {title} (阿拉伯数字)")
+
+        self.report.add_fix("ZONES_HEADER", 0, "带防火墙的三区隔离法修复页眉页脚", success=True)
     
-    def _set_section_even_header(self, section):
-        """设置偶数页页眉（固定文本）"""
-        from docx.oxml import OxmlElement
-        from docx.oxml.ns import qn
+    # ==========================================
+    # 辅助写入函数
+    # ==========================================
+    def _write_header(self, header_obj, text):
+        """写入页眉内容"""
         from docx.enum.text import WD_ALIGN_PARAGRAPH
         from docx.shared import Pt
+        from docx.oxml.ns import qn
+        from docx.oxml import OxmlElement
         
-        try:
-            even_header = section.even_page_header
-            for p in list(even_header.paragraphs):
-                p._element.getparent().remove(p._element)
-            
-            p = even_header.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            
-            run = p.add_run("北京大学硕士学位论文")
+        # 清空现有段落
+        for p in list(header_obj.paragraphs):
+            p._element.getparent().remove(p._element)
+        
+        p = header_obj.add_paragraph()
+        p.text = text
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        for run in p.runs:
             run.font.name = '宋体'
+            run._element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
             run.font.size = Pt(10.5)
-            
-            p.paragraph_format.space_before = Pt(0)
-            p.paragraph_format.space_after = Pt(0)
-            
-            # 添加下划线边框
-            p_fmt = p._element.get_or_add_pPr()
-            pBdr = OxmlElement('w:pBdr')
-            bottom = OxmlElement('w:bottom')
-            bottom.set(qn('w:val'), 'single')
-            bottom.set(qn('w:sz'), '6')
-            bottom.set(qn('w:space'), '1')
-            bottom.set(qn('w:color'), '000000')
-            pBdr.append(bottom)
-            p_fmt.append(pBdr)
-        except Exception as e:
-            print(f"      警告: 偶数页页眉设置失败 - {e}")
-    
-    def _set_section_odd_header(self, section, title_text):
-        """设置奇数页页眉（固定文本）"""
+        self._add_header_bottom_border(p)
+
+    def _write_footer_page_num(self, footer_obj):
+        """写入页脚页码（手动注入 PAGE 域）"""
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
         from docx.oxml import OxmlElement
         from docx.oxml.ns import qn
-        from docx.enum.text import WD_ALIGN_PARAGRAPH
         from docx.shared import Pt
         
-        try:
-            odd_header = section.header
-            for p in list(odd_header.paragraphs):
-                p._element.getparent().remove(p._element)
-            
-            p = odd_header.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            
-            run = p.add_run(title_text)
-            run.font.name = '宋体'
-            run.font.size = Pt(10.5)
-            
-            p.paragraph_format.space_before = Pt(0)
-            p.paragraph_format.space_after = Pt(0)
-            
-            # 添加下划线边框
-            p_fmt = p._element.get_or_add_pPr()
-            pBdr = OxmlElement('w:pBdr')
-            bottom = OxmlElement('w:bottom')
-            bottom.set(qn('w:val'), 'single')
-            bottom.set(qn('w:sz'), '6')
-            bottom.set(qn('w:space'), '1')
-            bottom.set(qn('w:color'), '000000')
-            pBdr.append(bottom)
-            p_fmt.append(pBdr)
-        except Exception as e:
-            print(f"      警告: 奇数页页眉设置失败 - {e}")
-    
-    def _set_section_odd_header_styleref(self, section):
-        """设置奇数页页眉（STYLEREF动态域）"""
+        # 清空现有段落
+        for p in list(footer_obj.paragraphs):
+            p._element.getparent().remove(p._element)
+        
+        p = footer_obj.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = p.add_run()
+        
+        # 注入 PAGE 域代码
+        fldChar1 = OxmlElement('w:fldChar')
+        fldChar1.set(qn('w:fldCharType'), 'begin')
+        instrText = OxmlElement('w:instrText')
+        instrText.set(qn('xml:space'), 'preserve')
+        instrText.text = " PAGE "
+        fldChar2 = OxmlElement('w:fldChar')
+        fldChar2.set(qn('w:fldCharType'), 'separate')
+        fldChar3 = OxmlElement('w:fldChar')
+        fldChar3.set(qn('w:fldCharType'), 'end')
+        
+        run._r.append(fldChar1)
+        run._r.append(instrText)
+        run._r.append(fldChar2)
+        run._r.append(fldChar3)
+        run.font.name = 'Times New Roman'
+        run.font.size = Pt(10.5)
+
+    def _write_header_styleref(self, header_obj):
+        """写入页眉（STYLEREF动态域）"""
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
         from docx.oxml import OxmlElement
         from docx.oxml.ns import qn
-        from docx.enum.text import WD_ALIGN_PARAGRAPH
         from docx.shared import Pt
         
-        try:
-            odd_header = section.header
-            for p in list(odd_header.paragraphs):
-                p._element.getparent().remove(p._element)
-            
-            p = odd_header.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            
-            # 创建域代码 run
-            run = p.add_run()
-            
-            # 开始域字符
-            fldChar1 = OxmlElement('w:fldChar')
-            fldChar1.set(qn('w:fldCharType'), 'begin')
-            run._r.append(fldChar1)
-            
-            # 域指令 - 使用 Heading 1 样式
-            instrText = OxmlElement('w:instrText')
-            instrText.set(qn('xml:space'), 'preserve')
-            instrText.text = ' STYLEREF "Heading 1" \\* MERGEFORMAT '
-            run._r.append(instrText)
-            
-            # 分隔符
-            fldChar2 = OxmlElement('w:fldChar')
-            fldChar2.set(qn('w:fldCharType'), 'separate')
-            run._r.append(fldChar2)
-            
-            # 结束域
-            fldChar3 = OxmlElement('w:fldChar')
-            fldChar3.set(qn('w:fldCharType'), 'end')
-            run._r.append(fldChar3)
-            
-            # 设置字体
-            run.font.name = '宋体'
-            run.font.size = Pt(10.5)
-            
-            # 设置段落间距和下划线
-            p.paragraph_format.space_before = Pt(0)
-            p.paragraph_format.space_after = Pt(0)
-            
-            p_fmt = p._element.get_or_add_pPr()
-            pBdr = OxmlElement('w:pBdr')
-            bottom = OxmlElement('w:bottom')
-            bottom.set(qn('w:val'), 'single')
-            bottom.set(qn('w:sz'), '6')
-            bottom.set(qn('w:space'), '1')
-            bottom.set(qn('w:color'), '000000')
-            pBdr.append(bottom)
-            p_fmt.append(pBdr)
-        except Exception as e:
-            print(f"      警告: 奇数页页眉(STYLEREF)设置失败 - {e}")
-    
+        # 清空现有段落
+        for p in list(header_obj.paragraphs):
+            p._element.getparent().remove(p._element)
+        
+        p = header_obj.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # 创建域代码 run
+        run = p.add_run()
+        
+        # 开始域字符
+        fldChar1 = OxmlElement('w:fldChar')
+        fldChar1.set(qn('w:fldCharType'), 'begin')
+        run._r.append(fldChar1)
+        
+        # 域指令 - 使用 Heading 1 样式
+        instrText = OxmlElement('w:instrText')
+        instrText.set(qn('xml:space'), 'preserve')
+        instrText.text = ' STYLEREF "Heading 1" \\* MERGEFORMAT '
+        run._r.append(instrText)
+        
+        # 分隔符
+        fldChar2 = OxmlElement('w:fldChar')
+        fldChar2.set(qn('w:fldCharType'), 'separate')
+        run._r.append(fldChar2)
+        
+        # 结束域
+        fldChar3 = OxmlElement('w:fldChar')
+        fldChar3.set(qn('w:fldCharType'), 'end')
+        run._r.append(fldChar3)
+        
+        # 设置字体
+        run.font.name = '宋体'
+        run.font.size = Pt(10.5)
+        
+        # 设置段落间距和下划线
+        p.paragraph_format.space_before = Pt(0)
+        p.paragraph_format.space_after = Pt(0)
+        
+        self._add_header_bottom_border(p)
+
+    def _add_header_bottom_border(self, paragraph):
+        """为段落添加底部边框（下划线效果）"""
+        from docx.oxml import OxmlElement
+        from docx.oxml.ns import qn
+        
+        p_fmt = paragraph._element.get_or_add_pPr()
+        pBdr = OxmlElement('w:pBdr')
+        bottom = OxmlElement('w:bottom')
+        bottom.set(qn('w:val'), 'single')
+        bottom.set(qn('w:sz'), '6')
+        bottom.set(qn('w:space'), '1')
+        bottom.set(qn('w:color'), '000000')
+        pBdr.append(bottom)
+        p_fmt.append(pBdr)
+
     def fix_page_numbers(self):
         """修复页码：从第一章开始重新编号"""
         from docx.oxml import OxmlElement
@@ -917,7 +905,7 @@ class DocxAutoFixer:
             
             instrText = OxmlElement('w:instrText')
             instrText.set(qn('xml:space'), 'preserve')
-            instrText.text = ' STYLEREF "Heading 1" \* MERGEFORMAT '
+            instrText.text = r' STYLEREF "Heading 1" \* MERGEFORMAT '
             run._r.append(instrText)
             
             fldChar2 = OxmlElement('w:fldChar')
