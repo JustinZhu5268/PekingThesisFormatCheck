@@ -4,3 +4,4 @@
 python-docx>=0.8.11  # docx读写
 lxml>=4.9           # 安全读取XML（页眉/脚注/域代码，只读不写）
 anthropic>=0.39.0   # Claude API
+pypinyin>=0.49.0    # 中文拼音排序

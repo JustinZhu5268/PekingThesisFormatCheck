@@ -11,8 +11,9 @@ import re
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple, Any
 from docx import Document
-from docx.shared import Pt, RGBColor
-from docx.enum.text import WD_LINE_SPACING
+from docx.shared import Pt, Cm, RGBColor
+from docx.enum.text import WD_LINE_SPACING, WD_ALIGN_PARAGRAPH
+from pypinyin import lazy_pinyin
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
@@ -1358,9 +1359,9 @@ class DocxAutoFixer:
         print(f"    中文文献: {len(chinese_refs)} 篇")
         print(f"    英文文献: {len(english_refs)} 篇")
         
-        # 排序
-        chinese_refs.sort()
-        english_refs.sort()
+        # 排序：中文按拼音排序，英文按字母排序
+        chinese_refs.sort(key=lambda x: ''.join(lazy_pinyin(x)).lower())
+        english_refs.sort(key=lambda x: x.lower())
         
         # 合并：中文在前，英文在后
         sorted_refs = chinese_refs + english_refs
@@ -1398,32 +1399,38 @@ class DocxAutoFixer:
                     para.add_run(ref_text)
             else:
                 # 创建新段落
-                new_para = self.doc.add_paragraph(ref_text)
-                # 设置样式为 Normal
-                new_para.style = 'Normal'
+                para = self.doc.add_paragraph(ref_text)
+                para.style = 'Normal'
             
-            # 设置悬挂缩进格式
-            if insert_idx + i < len(self.doc.paragraphs):
-                para = self.doc.paragraphs[insert_idx + i]
-                
-                # 设置字体：分别设置中英文字体
-                for run in para.runs:
-                    # 检查是否包含中文
-                    if re.search(r'[\u4e00-\u9fa5]', run.text):
-                        run.font.name = '宋体'  # 中文宋体
-                    else:
-                        run.font.name = 'Times New Roman'  # 英文
-                    run.font.size = Pt(10.5)  # 五号
-                
-                # 设置行距：固定值 16 磅
-                para.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
-                para.paragraph_format.line_spacing = Pt(16)  # 固定值 16 磅
-                para.paragraph_format.space_before = Pt(3)   # 段前 3 磅
-                para.paragraph_format.space_after = Pt(0)    # 段后 0 磅
-                
-                # 悬挂缩进：左侧缩进 2 字符，首行凸出 2 字符
-                para.paragraph_format.left_indent = Pt(21)       # 左侧缩进 2 字符
-                para.paragraph_format.first_line_indent = Pt(-21) # 首行凸出 2 字符
+            # 统一设置格式：对齐、悬挂缩进、行距、双语字体
+            # 1. 设置对齐和悬挂缩进 (使用 Cm 确保绝对精确)
+            para.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY  # 两端对齐
+            para.paragraph_format.left_indent = Cm(0.74)       # 左缩进 0.74cm ≈ 2个汉字(五号)
+            para.paragraph_format.first_line_indent = Cm(-0.74) # 首行悬挂 2 字符
+            
+            # 2. 设置行距：固定值 16 磅，段前 3 磅，段后 0 磅
+            para.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
+            para.paragraph_format.line_spacing = Pt(16)
+            para.paragraph_format.space_before = Pt(3)
+            para.paragraph_format.space_after = Pt(0)
+            
+            # 3. 设置中英文字体分离 (底层 XML 注入)
+            for run in para.runs:
+                # 英文/数字使用 Times New Roman
+                run.font.name = 'Times New Roman'
+                # 中文强制使用宋体 (eastAsia 字体)
+                run._element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+                run.font.size = Pt(10.5)  # 五号
+            
+            # 4. 【核心黑科技】：允许西文在单词中间换行
+            # 这将完美解决两端对齐时，长 URL 导致的字间距被异常拉伸的问题
+            # <w:wordWrap w:val="0"/> - 0 表示关闭默认的单词包裹，允许中间断行
+            pPr = para._p.get_or_add_pPr()
+            wordWrap = pPr.find(qn('w:wordWrap'))
+            if wordWrap is None:
+                wordWrap = OxmlElement('w:wordWrap')
+                pPr.append(wordWrap)
+            wordWrap.set(qn('w:val'), '0')
         
         self.report.add_fix("REF_CITATIONS", replace_count, "正文引用格式和参考文献列表修复", success=True)
         print(f"    参考文献修复完成!")
