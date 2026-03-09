@@ -1,0 +1,45 @@
+======================================================================
+检查前面章节的Heading 1 - 查看完整XML
+======================================================================
+
+段落 201: [Heading 1]
+  文本: 绪论
+  无numPr
+  有pPr元素
+    pStyle: {'{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val': '2'}
+    adjustRightInd: {'{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val': '0'}
+    snapToGrid: {'{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val': '0'}
+    spacing: {'{http://schemas.openxmlformats.org/wordprocessingml/2006/main}before': '480', '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}after': '0', '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}line': '240', '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}lineRule': 'auto'}
+    rPr: {}
+
+======================================================================
+检查末尾Heading 1 - 参考文献/附录/致谢
+======================================================================
+
+段落 1017: [Heading 1]
+  文本: 参考文献
+  无numPr
+  有pPr元素
+    pStyle: {'{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val': '2'}
+    bidi: {'{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val': '0'}
+    rPr: {}
+  有rPr元素
+
+段落 1067: [Heading 1]
+  文本: 附录  A医疗集团医疗收入质量优化方案可行性访谈问卷
+  无numPr
+  有pPr元素
+    pStyle: {'{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val': '2'}
+    bidi: {'{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val': '0'}
+    spacing: {'{http://schemas.openxmlformats.org/wordprocessingml/2006/main}before': '60', '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}after': '0', '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}line': '320', '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}lineRule': 'exact'}
+    ind: {'{http://schemas.openxmlformats.org/wordprocessingml/2006/main}left': '839', '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}firstLine': '0'}
+    rPr: {}
+  有rPr元素
+
+======================================================================
+检查文档样式定义
+======================================================================
+样式: Heading 1, 类型: PARAGRAPH (1)
+  包含numPr定义!
+    ilvl: 0
+    numId: 1

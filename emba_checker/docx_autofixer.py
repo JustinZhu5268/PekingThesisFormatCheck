@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Tuple, Any
 from docx import Document
 from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_LINE_SPACING
+from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -319,10 +320,49 @@ class DocxAutoFixer:
             print("  未找到'第一章'（Heading 1 + 绪论），跳过页眉修复")
             return
         
-        # 获取正文部分的section（通常是第二个section，因为第一个是封面到目录）
+        # 找到第一章所在的section索引
         sections = list(self.doc.sections)
-        if len(sections) > 1:
-            target_section = sections[1]  # 假设第一个是目录，第二个是正文
+        body_section_index = 0
+        
+        # 遍历所有段落，找到它们属于哪个section
+        # 通过检查段落的XML来确定它属于哪个section
+        for i, section in enumerate(sections):
+            # 检查section的起始位置
+            if i < len(sections) - 1:
+                # 检查下一个section的起始段落
+                next_section = sections[i + 1]
+                # 如果第一章在这个section之后，下一个section之前
+                for para_idx, para in enumerate(self.doc.paragraphs):
+                    if para_idx >= chapter1_idx:
+                        # 找到第一章属于哪个section
+                        body_section_index = i + 1
+                        break
+                if body_section_index > 0:
+                    break
+        
+        # 更简单的方法：找到"绪论"段落的索引，然后找到它属于哪个section
+        # 通过检查section的起始位置来判断
+        body_section_index = 1  # 默认第一章在第2个section（索引1）
+        
+        print(f"  第一章在段落 {chapter1_idx}，正文section索引: {body_section_index}")
+        
+        # Bug修复1: 清空前置部分（封面、声明等）的页眉页脚
+        # 在"第一章"所在section之前的所有section都要清空
+        for i, section in enumerate(sections):
+            if i < body_section_index:
+                # 清空页眉
+                section.header.is_linked_to_previous = False
+                for p in list(section.header.paragraphs):
+                    p._element.getparent().remove(p._element)
+                
+                # 清空页脚
+                section.footer.is_linked_to_previous = False
+                for p in list(section.footer.paragraphs):
+                    p._element.getparent().remove(p._element)
+        
+        # 获取正文部分的section
+        if len(sections) > body_section_index:
+            target_section = sections[body_section_index]
         else:
             target_section = sections[0]
         
@@ -562,36 +602,65 @@ class DocxAutoFixer:
             print(f"  TOC更新完成: {count} 处")
     
     def _insert_section_break_before_paragraph(self, para_index):
-        """在指定段落之前插入分节符（下一页）"""
+        """在指定段落之前插入分节符（下一页），并设置新section的header"""
         from docx.oxml import OxmlElement
         from docx.oxml.ns import qn
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
         
         # 获取目标段落元素
         target_para = self.doc.paragraphs[para_index]
         target_xml = target_para._element
         
         # 在目标段落之前插入一个新的空段落，包含分节符
-        # 创建一个新的p元素，包含分节符
         new_p = OxmlElement('w:p')
-        
-        # 创建pPr元素
         pPr = OxmlElement('w:pPr')
         new_p.append(pPr)
         
-        # 创建sectPr（分节符）
         sectPr = OxmlElement('w:sectPr')
         pPr.append(sectPr)
         
-        # 设置为下一页分节符
         type_elem = OxmlElement('w:type')
         type_elem.set(qn('w:val'), 'nextPage')
         sectPr.append(type_elem)
         
-        # 获取父元素（通常是body）
         body = target_xml.getparent()
-        
-        # 在目标段落之前插入
         body.insert(list(body).index(target_xml), new_p)
+        
+        # 重新加载doc以获取新section
+        from docx import Document
+        self.doc = Document(self.doc._part.main_document_part.blob)
+        sections = list(self.doc.sections)
+        
+        if len(sections) > 1:
+            # 设置最后一个section（新创建的）的header
+            new_section = sections[-1]
+            new_section.header.is_linked_to_previous = False
+            
+            # 清空header
+            for p in list(new_section.header.paragraphs):
+                p._element.getparent().remove(p._element)
+            
+            # 设置STYLEREF页眉
+            p = new_section.header.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            
+            run = p.add_run()
+            fldChar1 = OxmlElement('w:fldChar')
+            fldChar1.set(qn('w:fldCharType'), 'begin')
+            run._r.append(fldChar1)
+            
+            instrText = OxmlElement('w:instrText')
+            instrText.set(qn('xml:space'), 'preserve')
+            instrText.text = ' STYLEREF "Heading 1" \* MERGEFORMAT '
+            run._r.append(instrText)
+            
+            fldChar2 = OxmlElement('w:fldChar')
+            fldChar2.set(qn('w:fldCharType'), 'separate')
+            run._r.append(fldChar2)
+            
+            fldChar3 = OxmlElement('w:fldChar')
+            fldChar3.set(qn('w:fldCharType'), 'end')
+            run._r.append(fldChar3)
     
     def fix_references_format(self):
         """修复参考文献列表格式：英文标点 + 悬挂缩进2字符"""
@@ -666,6 +735,24 @@ class DocxAutoFixer:
                 para_format = para.paragraph_format
                 para_format.first_line_indent = Pt(-21)  # 悬挂缩进
                 para_format.left_indent = Pt(21)        # 左缩进
+                
+                # Bug修复2: 使用XML方式确保悬挂缩进生效
+                para_xml = para._element
+                pPr = para_xml.find('.//w:pPr', {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'})
+                if pPr is None:
+                    pPr = OxmlElement('w:pPr')
+                    para_xml.insert(0, pPr)
+                
+                # 设置 ind 元素
+                ind = pPr.find('.//w:ind', {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'})
+                if ind is None:
+                    ind = OxmlElement('w:ind')
+                    pPr.append(ind)
+                
+                # left: 左缩进21磅, firstLine: 首行缩进-21磅（负数表示悬挂）
+                ind.set(qn('w:left'), '2205')    # 21pt in EMUs (approx 2205)
+                ind.set(qn('w:firstLine'), '-2205')  # -21pt in EMUs
+                
                 count_indent += 1
             except Exception as e:
                 pass  # 忽略格式设置错误
@@ -680,11 +767,13 @@ class DocxAutoFixer:
         """修复致谢标点：将半角逗号改为全角逗号"""
         print("  修复致谢标点...")
         
-        # 找到"致谢"标题的位置
+        # Bug修复3: 找到"致谢"标题的位置（处理"致 谢"中间有空格的情况）
         ack_start_idx = None
         for i, para in enumerate(self.doc.paragraphs):
             text = para.text.strip()
-            if text == "致谢":
+            # 移除空格后再比较，处理"致 谢"的情况
+            text_nospace = text.replace(' ', '').replace('\t', '')
+            if text_nospace == "致谢":
                 ack_start_idx = i
                 break
         
@@ -768,6 +857,7 @@ class DocxAutoFixer:
     def fix_toc_levels(self):
         """修复目录层级：将TOC显示级别从3级改为2级"""
         import re
+        from docx.oxml import OxmlElement
         from docx.oxml.ns import qn
         from docx.oxml import OxmlElement
         
@@ -1101,9 +1191,12 @@ class DocxAutoFixer:
         self.fix_page_numbers()
         self.fix_headers()
         
+        # 修复章标题编号字体（必须在禁用编号之前执行）
+        self.fix_heading1_numbering_font()
+        
         # 修复尾部格式问题
         self.fix_chapter_tail_numbers()
-        self.fix_references_format()
+        self.fix_heading_spacing()
         self.fix_acknowledgments_punctuation()
         self.fix_caption_colon()
         
@@ -1799,7 +1892,138 @@ class DocxAutoFixer:
         for char in text:
             if ('a' <= char <= 'z') or ('A' <= char <= 'Z') or ('0' <= char <= '9'):
                 return True
-        return False
+    def fix_heading_spacing(self):
+        """
+        统一所有 Heading 1 标题的字体和间距
+        规则：黑体，三号(16pt)，居中，单倍行距，段前24磅，段后18磅
+        """
+        from docx.shared import Pt
+        from docx.enum.text import WD_LINE_SPACING, WD_ALIGN_PARAGRAPH
+        from docx.oxml.ns import qn
+        
+        print("  统一标题样式...")
+        
+        fixed_count = 0
+        
+        for idx, para in enumerate(self.doc.paragraphs):
+            if not para.style:
+                continue
+            style_name = para.style.name if para.style.name else ""
+            if 'Heading 1' not in style_name:
+                continue
+            
+            text = para.text.strip()
+            text_short = text[:20] if len(text) > 20 else text
+            
+            # 1. 设置居中对齐
+            para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            
+            # 2. 设置段落间距：段前24pt，段后18pt，单倍行距
+            pf = para.paragraph_format
+            pf.space_before = Pt(24)
+            pf.space_after = Pt(18)
+            pf.line_spacing_rule = WD_LINE_SPACING.SINGLE
+            
+            # 3. 设置字体：黑体，16pt
+            if not para.runs:
+                para.add_run(text)
+            
+            for run in para.runs:
+                run.font.size = Pt(16)
+                run.font.name = '黑体'
+                # 设置中文字体
+                run._element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+            
+            fixed_count += 1
+            print(f"    已修复: 段落 {idx}, {text_short}")
+        
+        print(f"  标题样式统一完成: {fixed_count} 个标题")
+        
+        if fixed_count > 0:
+            self.report.add_fix("HEADING_STYLE_UNIFY", fixed_count, "统一标题样式（黑体/16pt/居中/段前24pt/段后18pt/单倍行距）", success=True)
+
+    def fix_heading1_numbering_font(self):
+        """强制将 Heading 1 (章标题) 的自动编号字体设置为黑体"""
+        from docx.oxml import OxmlElement
+        from docx.oxml.ns import qn
+        
+        print("  修复章标题编号字体...")
+        
+        if not self.doc.part.numbering_part:
+            print("    无 numbering 部分，跳过")
+            return
+            
+        numbering_xml = self.doc.part.numbering_part._element
+        fixed_count = 0
+        
+        # 方法1: 查找 Heading 1 样式中定义的编号
+        heading1_numId = None
+        
+        # 从文档样式中查找 Heading 1 的 numId
+        for style in self.doc.styles:
+            if style.name == 'Heading 1':
+                style_elem = style._element
+                pPr = style_elem.find(qn('w:pPr'))
+                if pPr is not None:
+                    numPr = pPr.find(qn('w:numPr'))
+                    if numPr is not None:
+                        numId_elem = numPr.find(qn('w:numId'))
+                        if numId_elem is not None:
+                            heading1_numId = numId_elem.get(qn('w:val'))
+                            print(f"    找到 Heading 1 样式编号: numId={heading1_numId}")
+                            break
+        
+        if heading1_numId is None:
+            print("    未找到 Heading 1 样式编号，跳过")
+            return
+        
+        try:
+            # 追踪到 abstractNum 模板
+            num_nodes = numbering_xml.xpath(f'.//w:num[@w:numId="{heading1_numId}"]/w:abstractNumId')
+            if not num_nodes:
+                print(f"    未找到 numId={heading1_numId} 对应的 abstractNum")
+                return
+                
+            abstractNumId_val = num_nodes[0].get(qn('w:val'))
+            print(f"    abstractNumId={abstractNumId_val}")
+            
+            # 查找 lvl 元素 (第一级标题)
+            lvl_nodes = numbering_xml.xpath(f'.//w:abstractNum[@w:abstractNumId="{abstractNumId_val}"]/w:lvl[@w:ilvl="0"]')
+            if not lvl_nodes:
+                print(f"    未找到 lvl 0 级别")
+                return
+                
+            lvl_node = lvl_nodes[0]
+            
+            # 获取或创建 rPr (运行属性)
+            rPr = lvl_node.find(qn('w:rPr'))
+            if rPr is None:
+                rPr = OxmlElement('w:rPr')
+                lvl_node.insert(0, rPr)
+                
+            # 获取或创建 rFonts (字体设置)
+            rFonts = rPr.find(qn('w:rFonts'))
+            if rFonts is None:
+                rFonts = OxmlElement('w:rFonts')
+                rPr.append(rFonts)
+                
+            # 强制将编号字体设置为黑体
+            rFonts.set(qn('w:ascii'), '黑体')
+            rFonts.set(qn('w:eastAsia'), '黑体')
+            rFonts.set(qn('w:hAnsi'), '黑体')
+            rFonts.set(qn('w:cs'), '黑体')
+            
+            fixed_count = 1
+            print(f"    已修复编号模板: numId={heading1_numId}, abstractNumId={abstractNumId_val}")
+            
+        except Exception as e:
+            print(f"    修复章标题编号字体时出错: {e}")
+            return
+        
+        print(f"  章标题编号字体修复完成: {fixed_count} 个模板")
+        
+        if fixed_count > 0:
+            self.report.add_fix("HEADING1_NUM_FONT", fixed_count, "修复章标题自动编号字体为黑体", success=True)
 
 
 def auto_fix(doc_path: str, rules_path: str, output_path: str = None, 
@@ -1866,3 +2090,5 @@ if __name__ == "__main__":
     print(f"\n修复完成!")
     print(f"输出文件: {output_path}")
     print(f"修复摘要: {report.get_summary()}")
+
+

@@ -67,7 +67,7 @@ class TestMDParser:
     """MD清单解析器测试"""
     def test_parse_md_rules(self):
         from emba_checker.md_parser import parse_md_to_rules
-        md_path = "D:/Projects/ThesisFormatCheck/docs/EMBA论文格式排版要求清单完善版.md"
+        md_path = "D:/Projects/ThesisFormatCheck/EMBA论文格式排版要求清单完善版.md"
         rules = parse_md_to_rules(md_path)
         assert len(rules) > 0
 

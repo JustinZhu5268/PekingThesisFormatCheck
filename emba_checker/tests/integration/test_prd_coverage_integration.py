@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, 'D:/Projects/ThesisFormatCheck')
 
 # 真实docx
-REAL_DOCX = 'D:/Projects/ThesisFormatCheck/data/医保支付方式改革下A医疗集团医疗收入质量优化研究——以A医疗集团为例-定稿V1.0.docx'
+REAL_DOCX = 'D:/Projects/ThesisFormatCheck/医保支付方式改革下A医疗集团医疗收入质量优化研究——以A医疗集团为例-定稿V1.0.docx'
 
 
 # FR-ENGINE-01: DocxEngine - Python确定性检查引擎
@@ -43,8 +43,7 @@ class TestClaudeEngineIntegration:
         from emba_checker.claude_engine import ClaudeEngine
         from docx import Document
         doc = Document()
-        # 需要 4 个参数: doc, rules, zone_map, api_key
-        engine = ClaudeEngine(doc, [], zone_map={}, api_key=None)
+        engine = ClaudeEngine(doc, [], {}, api_key=None)
         assert engine.is_enabled() == False
 
 
@@ -81,31 +80,25 @@ class TestIssueMerger:
     """结果合并去重测试 - FR-ENGINE-04"""
     
     def test_merge_issues(self):
-        """测试问题合并功能"""
+        # 使用main_engine中实际存在的_merge_issues方法
         from emba_checker.main_engine import MainEngine
         from docx import Document
-        import os
-
-        # 创建临时文档用于测试
-        doc_path = "D:/Projects/ThesisFormatCheck/data/医保支付方式改革下A医疗集团医疗收入质量优化研究——以A医疗集团为例-定稿V1.0.docx"
-
-        if os.path.exists(doc_path):
-            # 使用真实文件
-            engine = MainEngine(doc_path)
-
-            python_issues = [
-                {"rule_id": "TEST_01", "message": "error1"},
-                {"rule_id": "TEST_02", "message": "error2"}
-            ]
-            claude_issues = [
-                {"rule_id": "TEST_01", "message": "error1"}  # 重复
-            ]
-
-            merged = engine._merge_issues(python_issues, claude_issues)
-            assert isinstance(merged, list)
-        else:
-            # 如果文件不存在，跳过测试
-            pytest.skip(f"Test file not found: {doc_path}")
+        
+        # 创建引擎实例并设置必要的属性
+        engine = MainEngine.__new__(MainEngine)
+        engine.rules = []
+        engine.stats = {}  # 需要stats属性
+        
+        python_issues = [
+            {"rule_id": "TEST_01", "message": "error1"},
+            {"rule_id": "TEST_02", "message": "error2"}
+        ]
+        claude_issues = [
+            {"rule_id": "TEST_01", "message": "error1"}  # 重复
+        ]
+        
+        merged = engine._merge_issues(python_issues, claude_issues)
+        assert isinstance(merged, list)
 
 
 # FR-GROUP-01~07: 6个Group遍历

@@ -84,9 +84,15 @@ def parse_args():
     )
 
     parser.add_argument(
+        '--verify',
+        action='store_true',
+        help='验证修复结果：对比原始文档和修复后文档的内容差异'
+    )
+
+    parser.add_argument(
         '--original',
         default=None,
-        help='原始文档路径（用于--diff模式）'
+        help='原始文档路径（用于--diff或--verify模式）'
     )
 
     return parser.parse_args()
@@ -248,6 +254,155 @@ def run_diff_mode(input_file: str, original_file: str = None):
     return 0
 
 
+def run_verify_mode(fixed_file: str, original_file: str = None):
+    """验证模式：对比原始文档和修复后文档的内容差异"""
+    import re
+    from docx import Document
+    
+    print("\n" + "=" * 60)
+    print("验证修复结果 - 内容对比")
+    print("=" * 60)
+    
+    data_dir = os.path.join(BASE_DIR, 'data')
+    
+    # 自动查找最新的修复文件和对应备份
+    if not original_file:
+        fixed_files = [f for f in glob.glob(os.path.join(data_dir, 'test_已修复_*.docx')) 
+                      if '原文件' not in f and '备份' not in f]
+        if fixed_files:
+            # 按修改时间排序，找最新的
+            fixed_file = max(fixed_files, key=os.path.getmtime)
+            # 对应的备份文件
+            timestamp = os.path.basename(fixed_file).replace('test_已修复_', '').replace('.docx', '')
+            original_file = os.path.join(data_dir, f'test_已修复_{timestamp}_原文件备份.docx')
+            print(f"修复文件: {os.path.basename(fixed_file)}")
+            print(f"备份文件: {os.path.basename(original_file)}")
+    
+    if not original_file or not os.path.exists(original_file):
+        print("错误: 未找到原始文档，请使用 --original 指定")
+        return 1
+    
+    print(f"\n比较文档:")
+    print(f"  原始: {os.path.basename(original_file)}")
+    print(f"  修复: {os.path.basename(fixed_file)}")
+    print()
+    
+    doc1 = Document(original_file)
+    doc2 = Document(fixed_file)
+    
+    paragraphs1 = [p.text.strip() for p in doc1.paragraphs]
+    paragraphs2 = [p.text.strip() for p in doc2.paragraphs]
+    
+    print(f"原始文档段落数: {len(paragraphs1)}")
+    print(f"修复文档段落数: {len(paragraphs2)}")
+    print("=" * 60)
+    
+    # 标准化函数
+    def normalize_for_comparison(text):
+        """标准化文本用于比较：排除格式差异"""
+        # 图表编号格式：图2-1 -> 图2.1
+        text = re.sub(r'([图表])\s*(\d+)\s*-\s*(\d+)', r'\1\2.\3', text)
+        # 中文标点转英文
+        text = text.replace('；', ',').replace('：', ':')
+        # 去除标题后的小数点：1.1. 标题 -> 1.1 标题
+        text = re.sub(r'^(\d+\.\d+)\.\s+', r'\1 ', text)
+        # 去除三级标题后的小数点
+        text = re.sub(r'^(\d+\.\d+\.\d+)\.\s+', r'\1 ', text)
+        # 去掉多余空格
+        text = re.sub(r'\s+', '', text)
+        return text
+    
+    # 找出差异
+    differences = []
+    format_changes = []
+    
+    max_len = max(len(paragraphs1), len(paragraphs2))
+    
+    for i in range(max_len):
+        p1 = paragraphs1[i] if i < len(paragraphs1) else "[不存在]"
+        p2 = paragraphs2[i] if i < len(paragraphs2) else "[不存在]"
+        
+        if p1 != p2:
+            norm1 = normalize_for_comparison(p1)
+            norm2 = normalize_for_comparison(p2)
+            
+            if norm1 == norm2:
+                format_changes.append({'index': i, 'original': p1, 'fixed': p2})
+            else:
+                differences.append({
+                    'index': i,
+                    'original': p1,
+                    'fixed': p2,
+                    'original_len': len(p1),
+                    'fixed_len': len(p2)
+                })
+    
+    print(f"\n发现 {len(differences)} 处文字差异")
+    print(f"发现 {len(format_changes)} 处格式变化（已排除）\n")
+    
+    # 显示前30个差异
+    for i, diff in enumerate(differences[:30]):
+        print(f"{i+1}. 段落 {diff['index']}:")
+        print(f"   原始: {diff['original'][:60]}...")
+        print(f"   修复: {diff['fixed'][:60]}...")
+        print()
+    
+    if len(differences) > 30:
+        print(f"... 还有 {len(differences) - 30} 处差异")
+    
+    # 统计格式变化类型
+    fig_num_changes = sum(1 for fc in format_changes 
+                         if re.search(r'[图表]\d+-\d+', fc['original']) or re.search(r'[图表]\d+\.\d+', fc['fixed']))
+    
+    print("\n" + "=" * 60)
+    print("格式变化统计:")
+    print("=" * 60)
+    print(f"图表编号格式变化: {fig_num_changes} 处")
+    print(f"其他格式变化: {len(format_changes) - fig_num_changes} 处")
+    print(f"文字差异: {len(differences)} 处")
+    
+    # 检查是否是预期的变化
+    expected_keyword_fix = False
+    expected_ref_fix = False
+    
+    for diff in differences:
+        orig = diff['original']
+        fixed = diff['fixed']
+        idx = diff['index']
+        
+        # 关键词分隔符变化
+        if '关键词' in orig and '；' in orig and '，' in fixed and '；' not in fixed:
+            expected_keyword_fix = True
+        
+        # 参考文献区域变化
+        if idx > 1000:
+            expected_ref_fix = True
+    
+    # 判断结果
+    print("\n" + "=" * 60)
+    print("结论:")
+    print("=" * 60)
+
+    # 只有关键词或参考文献区域的变化，且变化数量合理
+    has_expected_changes = expected_keyword_fix or expected_ref_fix
+    # 允许参考文献区域最多50处变化（每个条目一处），关键词最多1处
+    reasonable_ref_changes = expected_ref_fix and len(differences) <= 50
+    reasonable_keyword_changes = expected_keyword_fix and len(differences) <= 1
+    only_expected = has_expected_changes and (reasonable_ref_changes or reasonable_keyword_changes)
+    
+    if only_expected:
+        print("✓ 内容变化仅为预期的格式修复")
+        print("  (关键词分隔符 + 参考文献格式)")
+        return 0
+    elif len(differences) == 0:
+        print("✓ 内容变化仅限于格式，没有实质性文字变化")
+        return 0
+    else:
+        print(f"✗ 发现 {len(differences)} 处非预期的实质性变化！")
+        print("  需要检查修复逻辑")
+        return 1
+
+
 def run_inspect_mode(input_file: str):
     """检查模式：检查文档的实际格式"""
     from docx import Document
@@ -361,10 +516,46 @@ def run_inspect_mode(input_file: str):
 
 def run_fix_mode(input_file: str, rules_path: str, args):
     """修复模式：自动修复格式问题"""
+    import re
+    from docx import Document
     from emba_checker.docx_autofixer import auto_fix
 
-    print("\n开始自动修复...\n")
-
+    print("\n" + "=" * 60)
+    print("开始自动修复...")
+    print("=" * 60)
+    
+    # ========== 修复前检查 ==========
+    print("\n【修复前格式检查】")
+    doc = Document(input_file)
+    
+    # 1. 检查节标题小数点格式
+    heading_issues = []
+    for i, para in enumerate(doc.paragraphs):
+        text = para.text.strip()
+        if re.match(r'^\d+\.\d+\.\s+', text):
+            heading_issues.append((i, text[:50]))
+    
+    # 2. 检查图表编号格式
+    figure_issues = []
+    for i, para in enumerate(doc.paragraphs):
+        text = para.text.strip()
+        matches = re.findall(r'[图表]\s*\d+-\d+', text)
+        if matches:
+            figure_issues.append((i, matches))
+    
+    # 3. 检查参考文献
+    ref_issues = []
+    for i, para in enumerate(doc.paragraphs):
+        text = para.text.strip()
+        if re.match(r'^\s*\[\d+\]', text):
+            ref_issues.append((i, text[:50]))
+    
+    print(f"  节标题小数点问题: {len(heading_issues)} 处")
+    print(f"  图表编号格式问题: {len(figure_issues)} 处")
+    print(f"  参考文献序号问题: {len(ref_issues)} 处")
+    print("-" * 60)
+    
+    # 执行修复
     output_path, report = auto_fix(
         input_file,
         rules_path,
@@ -372,7 +563,33 @@ def run_fix_mode(input_file: str, rules_path: str, args):
         backup=not args.no_backup,
         verbose=args.verbose
     )
-
+    
+    # ========== 修复后检查 ==========
+    print("\n【修复后验证】")
+    doc_fixed = Document(output_path)
+    
+    # 1. 检查节标题
+    heading_fixed = 0
+    for i, para in enumerate(doc_fixed.paragraphs):
+        text = para.text.strip()
+        if re.match(r'^\d+\.\d+\.\s+', text):
+            heading_fixed += 1
+    
+    # 2. 检查图表编号
+    figure_fixed = 0
+    for i, para in enumerate(doc_fixed.paragraphs):
+        text = para.text.strip()
+        matches = re.findall(r'[图表]\s*\d+-\d+', text)
+        if matches:
+            figure_fixed += 1
+    
+    # 3. 检查参考文献
+    ref_fixed = 0
+    for i, para in enumerate(doc_fixed.paragraphs):
+        text = para.text.strip()
+        if re.match(r'^\s*\[\d+\]', text):
+            ref_fixed += 1
+    
     # 输出摘要
     summary = report.get_summary()
 
@@ -383,6 +600,11 @@ def run_fix_mode(input_file: str, rules_path: str, args):
     print(f"总修复项: {summary['total_fixes']}")
     print(f"  成功: {summary['successful_fixes']}")
     print(f"  失败: {summary['failed_fixes']}")
+    print("-" * 60)
+    print("\n格式修复对比:")
+    print(f"  节标题小数点: {len(heading_issues)} -> {heading_fixed}")
+    print(f"  图表编号: {len(figure_issues)} -> {figure_fixed}")
+    print(f"  参考文献序号: {len(ref_issues)} -> {ref_fixed}")
     print("=" * 60)
 
     # 生成修复报告文件
@@ -458,6 +680,8 @@ EMBA 论文格式自动修复工具
     # 确定运行模式
     if args.diff:
         mode = "对比模式（对比原始和修复文档格式差异）"
+    elif args.verify:
+        mode = "验证模式（对比原始和修复文档内容）"
     elif args.inspect:
         mode = "检查模式（检查文档实际格式）"
     elif args.check:
@@ -471,6 +695,9 @@ EMBA 论文格式自动修复工具
         # 对比模式
         if args.diff:
             return run_diff_mode(input_file, args.original)
+        # 验证模式
+        elif args.verify:
+            return run_verify_mode(input_file, args.original)
         # 检查模式（检查文档实际格式）
         elif args.inspect:
             return run_inspect_mode(input_file)

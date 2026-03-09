@@ -1,0 +1,97 @@
+======================================================================
+PRD 功能需求覆盖率报告
+======================================================================
+
+PRD需求总数: 70
+已覆盖需求: 70
+覆盖率: 100.0%
+
+----------------------------------------------------------------------
+已覆盖的需求:
+----------------------------------------------------------------------
+  [✓] [FR-ANNOTATE-01] 黄色高亮违规处
+  [✓] [FR-ANNOTATE-02] 独立段落标注(优先)
+  [✓] [FR-ANNOTATE-03] 段落末尾追加Run(降级1)
+  [✓] [FR-ANNOTATE-04] 仅记录到报告(降级2)
+  [✓] [FR-ANNOTATE-05] 文件安全保障-先复制后操作
+  [✓] [FR-CHECK-01] paragraph_style - 段落样式检查
+  [✓] [FR-CHECK-02] global_property - 全局/节属性检查
+  [✓] [FR-CHECK-03] regex_match - 正则匹配检查
+  [✓] [FR-CHECK-04] count_check - 计数/统计检查
+  [✓] [FR-CHECK-05] cross_reference - 交叉引用检查
+  [✓] [FR-CHECK-06] text_match - 文本精确匹配/包含检查
+  [✓] [FR-CHECK-07] forbidden_words - 禁用词/词库检查
+  [✓] [FR-CHECK-08] ai_semantic - Claude语义检查
+  [✓] [FR-ENGINE-01] DocxEngine - Python确定性检查引擎
+  [✓] [FR-ENGINE-02] ClaudeEngine - Claude语义引擎
+  [✓] [FR-ENGINE-03] 双擎独立运行机制
+  [✓] [FR-ENGINE-04] 结果合并去重
+  [✓] [FR-GROUP-01] Group1_Global - 全局属性遍历
+  [✓] [FR-GROUP-02] Group1B_HeaderFooter - 页眉页脚遍历
+  [✓] [FR-GROUP-03] Group2_Paragraphs - 段落与文本遍历
+  [✓] [FR-GROUP-04] Group3_Figures - 图表遍历
+  [✓] [FR-GROUP-05] Group4_Footnotes - 脚注遍历
+  [✓] [FR-GROUP-06] Group5_References - 参考文献遍历
+  [✓] [FR-GROUP-07] Group6_CrossRefs - 交叉引用遍历
+  [✓] [FR-GUI-01] 文件选择功能
+  [✓] [FR-GUI-02] API Key输入
+  [✓] [FR-GUI-03] 检查级别选择
+  [✓] [FR-GUI-04] 进度条显示
+  [✓] [FR-GUI-05] 结果摘要展示
+  [✓] [FR-GUI-06] 日志显示
+  [✓] [FR-GUI-07] 打开docx文件
+  [✓] [FR-GUI-08] 打开报告文件
+  [✓] [FR-RULE-01] MD清单解析器
+  [✓] [FR-RULE-02] 规则库生成器
+  [✓] [FR-RULE-03] 手动覆盖配置
+  [✓] [FR-RULE-04] 规则覆盖验证
+  [✓] [FR-RULE-05] 164条规则映射
+  [✓] [FR-TEST-01] 单元测试-工具函数
+  [✓] [FR-TEST-02] 单元测试-区域检测
+  [✓] [FR-TEST-03] 单元测试-规则解析
+  [✓] [FR-TEST-04] 单元测试-执行器
+  [✓] [FR-TEST-05] 集成测试-引擎管道
+  [✓] [FR-TEST-06] 集成测试-双擎协作
+  [✓] [FR-TEST-07] E2E测试-完整流程
+  [✓] [FR-TEST-08] E2E测试-GUI交互
+  [✓] [FR-UTIL-01] EMU单位换算
+  [✓] [FR-UTIL-02] 中文字符计数
+  [✓] [FR-UTIL-03] 英文字符计数
+  [✓] [FR-UTIL-04] 正则匹配
+  [✓] [FR-UTIL-05] XML安全读取
+  [✓] [FR-UTIL-06] 字体属性获取
+  [✓] [FR-UTIL-07] 段落属性获取
+  [✓] [FR-UTIL-08] 页面设置获取
+  [✓] [FR-ZONE-01] cover - 封面区域检测
+  [✓] [FR-ZONE-02] copyright - 版权声明区域
+  [✓] [FR-ZONE-03] declaration - 原创性声明区域
+  [✓] [FR-ZONE-04] abstract_cn - 中文摘要区域
+  [✓] [FR-ZONE-05] abstract_en - 英文摘要区域
+  [✓] [FR-ZONE-06] toc - 目录区域
+  [✓] [FR-ZONE-07] body_chapter - 正文章节区域
+  [✓] [FR-ZONE-08] references - 参考文献区域
+  [✓] [FR-ZONE-09] appendix - 附录区域
+  [✓] [FR-ZONE-10] acknowledgment - 致谢区域
+  [✓] [REQ-1] 基于MD清单生成自动检查工具
+  [✓] [REQ-2] 黄色高亮违规处+旁侧红色加粗标注修改建议
+  [✓] [REQ-3] 规则库先行，禁止业务代码硬编码if-else
+  [✓] [REQ-4] 同类规则分组遍历，最少遍历次数
+  [✓] [REQ-5] 自动化双向核对：MD↔规则库100%覆盖
+  [✓] [REQ-6] 极简GUI+Claude Sonnet 4.5 API双擎独立运行
+  [✓] [REQ-7] 零风险容忍：绝对禁止XML写入批注，安全降级链
+
+----------------------------------------------------------------------
+按类别统计:
+----------------------------------------------------------------------
+  红线要求: 7/7
+  检查类型: 8/8
+  区域识别: 10/10
+  分组遍历: 7/7
+  引擎: 4/4
+  标注: 5/5
+  GUI: 8/8
+  规则库: 5/5
+  工具函数: 8/8
+  测试: 8/8
+
+======================================================================

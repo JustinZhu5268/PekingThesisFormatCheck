@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, 'D:/Projects/ThesisFormatCheck')
 
 # 真实docx
-REAL_DOCX = 'D:/Projects/ThesisFormatCheck/data/医保支付方式改革下A医疗集团医疗收入质量优化研究——以A医疗集团为例-定稿V1.0.docx'
+REAL_DOCX = 'D:/Projects/ThesisFormatCheck/医保支付方式改革下A医疗集团医疗收入质量优化研究——以A医疗集团为例-定稿V1.0.docx'
 
 
 # REQ-1: 基于MD清单生成自动检查工具
