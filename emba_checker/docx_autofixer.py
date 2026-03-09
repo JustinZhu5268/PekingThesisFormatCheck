@@ -208,8 +208,9 @@ class DocxAutoFixer:
         section_map = {}  # sec_idx -> {'zone': 1/2/3, 'title': ''}
         current_sec_idx = 0
         found_toc = False
+        abstract_en_para_idx = None  # 记录英文摘要段落索引
         
-        for p in self.doc.paragraphs:
+        for idx, p in enumerate(self.doc.paragraphs):
             text = p.text.strip()
             style = p.style.name if p.style else ""
             
@@ -223,6 +224,9 @@ class DocxAutoFixer:
                 section_map[current_sec_idx]['zone'] = 2
                 if not section_map[current_sec_idx]['title']:
                     section_map[current_sec_idx]['title'] = text
+                # 记录英文摘要位置
+                if text == "ABSTRACT" and abstract_en_para_idx is None:
+                    abstract_en_para_idx = idx
                     
             # 触发器 2：发现目录，标记防火墙
             if text == "目录":
@@ -246,7 +250,54 @@ class DocxAutoFixer:
                 current_sec_idx += 1
         
         print(f"    扫描到 {len(section_map)} 个区域: {section_map}")
-
+        
+        # ==========================================
+        # 1.5. 分离中英文摘要：在 ABSTRACT 之前插入分节符（不产生空白页）
+        # ==========================================
+        if abstract_en_para_idx is not None:
+            try:
+                # 在英文摘要之前插入分节符（下一页），不产生空白页
+                target_para = self.doc.paragraphs[abstract_en_para_idx]
+                p_elem = target_para._element
+                
+                # 检查前一个元素是否是 sectPr（避免重复插入）
+                prev_sibling = p_elem.getprevious()
+                has_sect_pr = False
+                if prev_sibling is not None:
+                    has_sect_pr = (prev_sibling.tag == qn('w:sectPr'))
+                
+                if not has_sect_pr:
+                    sectPr = OxmlElement('w:sectPr')
+                    
+                    # 使用 nextPage 而不是 oddPage，避免产生空白页
+                    type_elem = OxmlElement('w:type')
+                    type_elem.set(qn('w:val'), 'nextPage')
+                    sectPr.append(type_elem)
+                    
+                    # 设置页面大小 (paperSize A4)
+                    pgSz = OxmlElement('w:pgSz')
+                    pgSz.set(qn('w:w'), '11906')
+                    pgSz.set(qn('w:h'), '16838')
+                    sectPr.append(pgSz)
+                    
+                    # 设置页边距
+                    pgMar = OxmlElement('w:pgMar')
+                    pgMar.set(qn('w:top'), '1440')
+                    pgMar.set(qn('w:right'), '1440')
+                    pgMar.set(qn('w:bottom'), '1440')
+                    pgMar.set(qn('w:left'), '1440')
+                    pgMar.set(qn('w:header'), '851')
+                    pgMar.set(qn('w:footer'), '992')
+                    pgMar.set(qn('w:gutter'), '0')
+                    sectPr.append(pgMar)
+                    
+                    p_elem.addprevious(sectPr)
+                    print(f"    已在 ABSTRACT 前插入分节符（段落 {abstract_en_para_idx}）")
+                else:
+                    print(f"    ABSTRACT 前已存在分节符，跳过")
+            except Exception as e:
+                print(f"    插入分节符失败: {e}")
+        
         # ==========================================
         # 2. 暴力清洗与重建引擎
         # ==========================================
