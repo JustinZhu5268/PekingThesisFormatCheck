@@ -231,11 +231,15 @@ class DocxAutoFixer:
                 if not section_map[current_sec_idx]['title']:
                     section_map[current_sec_idx]['title'] = "目录"
                     
-            # 触发器 3：【关键】越过目录防火墙后，发现真正的一级标题，进入 Zone 3 (正文区)
-            if found_toc and (style in ['Heading 1', '标题 1'] or (text.startswith("第") and "章" in text)):
-                section_map[current_sec_idx]['zone'] = 3
-                if not section_map[current_sec_idx]['title']:
-                    section_map[current_sec_idx]['title'] = text
+            # 触发器 3：【关键】越过目录防火墙后，发现真正的第一章标题，进入 Zone 3 (正文区)
+            # 必须同时满足：样式是Heading 1，且内容是"绪论"（可能有"第一章 "前缀）
+            if found_toc and style in ['Heading 1', '标题 1']:
+                # 提取纯标题文字（去除"第一章 "前缀）
+                pure_title = text.replace("第一章 ", "").replace("第一章", "").strip()
+                if pure_title == "绪论":
+                    section_map[current_sec_idx]['zone'] = 3
+                    if not section_map[current_sec_idx]['title']:
+                        section_map[current_sec_idx]['title'] = text
                     
             # 遇到分节符，进入下一个 Section
             if p._element.xpath('.//w:sectPr'):
