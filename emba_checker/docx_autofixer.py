@@ -1896,10 +1896,13 @@ class DocxAutoFixer:
         """
         统一所有 Heading 1 标题的字体和间距
         规则：黑体，三号(16pt)，居中，单倍行距，段前24磅，段后18磅
+        
+        关键：同时清洗段落标记(回车符)的底层属性，解决"第七章"自动编号字体不一致的顽疾
         """
         from docx.shared import Pt
         from docx.enum.text import WD_LINE_SPACING, WD_ALIGN_PARAGRAPH
         from docx.oxml.ns import qn
+        from docx.oxml import OxmlElement
         
         print("  统一标题样式...")
         
@@ -1933,6 +1936,59 @@ class DocxAutoFixer:
                 run.font.name = '黑体'
                 # 设置中文字体
                 run._element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                run.font.bold = True  # 确保加粗
+            
+            # 4. 【终极修复】：清洗段落标记(回车符)的底层属性
+            # 这一步专门解决"第七章"自动编号字体与正文不一致的顽疾
+            pPr = para._p.get_or_add_pPr()
+            
+            # 获取或创建 rPr 元素
+            rPr = pPr.find(qn('w:rPr'))
+            if rPr is None:
+                rPr = OxmlElement('w:rPr')
+                pPr.append(rPr)
+            
+            # 获取或创建字体节点
+            rFonts = rPr.find(qn('w:rFonts'))
+            if rFonts is None:
+                rFonts = OxmlElement('w:rFonts')
+                rPr.append(rFonts)
+            
+            # 清除主题字体干扰（防止Word强制回退到默认宋体）
+            for attr in ['asciiTheme', 'eastAsiaTheme', 'hAnsiTheme', 'cstheme']:
+                if qn(f'w:{attr}') in rFonts.attrib:
+                    del rFonts.attrib[qn(f'w:{attr}')]
+            
+            # 强制将段落标记设为黑体
+            rFonts.set(qn('w:ascii'), '黑体')
+            rFonts.set(qn('w:eastAsia'), '黑体')
+            rFonts.set(qn('w:hAnsi'), '黑体')
+            
+            # 强制将段落标记设为加粗
+            b = rPr.find(qn('w:b'))
+            if b is None:
+                b = OxmlElement('w:b')
+                rPr.append(b)
+            b.set(qn('w:val'), '1')
+            
+            bCs = rPr.find(qn('w:bCs'))
+            if bCs is None:
+                bCs = OxmlElement('w:bCs')
+                rPr.append(bCs)
+            bCs.set(qn('w:val'), '1')
+            
+            # 强制将段落标记字号设为三号 (16pt = 32 half-points)
+            sz = rPr.find(qn('w:sz'))
+            if sz is None:
+                sz = OxmlElement('w:sz')
+                rPr.append(sz)
+            sz.set(qn('w:val'), '32')
+            
+            szCs = rPr.find(qn('w:szCs'))
+            if szCs is None:
+                szCs = OxmlElement('w:szCs')
+                rPr.append(szCs)
+            szCs.set(qn('w:val'), '32')
             
             fixed_count += 1
             print(f"    已修复: 段落 {idx}, {text_short}")
@@ -1940,90 +1996,121 @@ class DocxAutoFixer:
         print(f"  标题样式统一完成: {fixed_count} 个标题")
         
         if fixed_count > 0:
-            self.report.add_fix("HEADING_STYLE_UNIFY", fixed_count, "统一标题样式（黑体/16pt/居中/段前24pt/段后18pt/单倍行距）", success=True)
+            self.report.add_fix("HEADING_STYLE_UNIFY", fixed_count, "统一标题样式（黑体/16pt/居中/段前24pt/段后18pt/单倍行距）+ 清洗段落标记", success=True)
 
     def fix_heading1_numbering_font(self):
-        """强制将 Heading 1 (章标题) 的自动编号字体设置为黑体"""
+        """
+        终极修复：强制将 Heading 1 (章标题) 的自动编号字体设置为黑体。
+        直接追踪每个段落实际使用的 numId，修改 numbering.xml，并清除主题字体干扰。
+        """
         from docx.oxml import OxmlElement
         from docx.oxml.ns import qn
-        
-        print("  修复章标题编号字体...")
-        
+
         if not self.doc.part.numbering_part:
-            print("    无 numbering 部分，跳过")
             return
-            
+
         numbering_xml = self.doc.part.numbering_part._element
-        fixed_count = 0
-        
-        # 方法1: 查找 Heading 1 样式中定义的编号
-        heading1_numId = None
-        
-        # 从文档样式中查找 Heading 1 的 numId
-        for style in self.doc.styles:
-            if style.name == 'Heading 1':
-                style_elem = style._element
-                pPr = style_elem.find(qn('w:pPr'))
-                if pPr is not None:
-                    numPr = pPr.find(qn('w:numPr'))
-                    if numPr is not None:
-                        numId_elem = numPr.find(qn('w:numId'))
-                        if numId_elem is not None:
-                            heading1_numId = numId_elem.get(qn('w:val'))
-                            print(f"    找到 Heading 1 样式编号: numId={heading1_numId}")
-                            break
-        
-        if heading1_numId is None:
-            print("    未找到 Heading 1 样式编号，跳过")
-            return
-        
-        try:
-            # 追踪到 abstractNum 模板
-            num_nodes = numbering_xml.xpath(f'.//w:num[@w:numId="{heading1_numId}"]/w:abstractNumId')
-            if not num_nodes:
-                print(f"    未找到 numId={heading1_numId} 对应的 abstractNum")
-                return
-                
-            abstractNumId_val = num_nodes[0].get(qn('w:val'))
-            print(f"    abstractNumId={abstractNumId_val}")
-            
-            # 查找 lvl 元素 (第一级标题)
-            lvl_nodes = numbering_xml.xpath(f'.//w:abstractNum[@w:abstractNumId="{abstractNumId_val}"]/w:lvl[@w:ilvl="0"]')
-            if not lvl_nodes:
-                print(f"    未找到 lvl 0 级别")
-                return
-                
-            lvl_node = lvl_nodes[0]
-            
-            # 获取或创建 rPr (运行属性)
-            rPr = lvl_node.find(qn('w:rPr'))
-            if rPr is None:
-                rPr = OxmlElement('w:rPr')
-                lvl_node.insert(0, rPr)
-                
-            # 获取或创建 rFonts (字体设置)
-            rFonts = rPr.find(qn('w:rFonts'))
-            if rFonts is None:
-                rFonts = OxmlElement('w:rFonts')
-                rPr.append(rFonts)
-                
-            # 强制将编号字体设置为黑体
-            rFonts.set(qn('w:ascii'), '黑体')
-            rFonts.set(qn('w:eastAsia'), '黑体')
-            rFonts.set(qn('w:hAnsi'), '黑体')
-            rFonts.set(qn('w:cs'), '黑体')
-            
-            fixed_count = 1
-            print(f"    已修复编号模板: numId={heading1_numId}, abstractNumId={abstractNumId_val}")
-            
-        except Exception as e:
-            print(f"    修复章标题编号字体时出错: {e}")
-            return
-        
-        print(f"  章标题编号字体修复完成: {fixed_count} 个模板")
-        
-        if fixed_count > 0:
-            self.report.add_fix("HEADING1_NUM_FONT", fixed_count, "修复章标题自动编号字体为黑体", success=True)
+        fixed_abstract_nums = set()
+
+        for para in self.doc.paragraphs:
+            # 识别章标题 (Heading 1)
+            if para.style and ('Heading 1' in para.style.name or '标题 1' in para.style.name):
+                pPr = para._p.pPr
+                if pPr is None:
+                    continue
+
+                numId_val = None
+                ilvl_val = "0"  # 默认一级标题
+
+                # 1. 优先检查段落自带的 numPr (覆盖样式)
+                numPr = pPr.find(qn('w:numPr'))
+                if numPr is not None:
+                    numId_node = numPr.find(qn('w:numId'))
+                    ilvl_node = numPr.find(qn('w:ilvl'))
+                    if numId_node is not None:
+                        numId_val = numId_node.get(qn('w:val'))
+                    if ilvl_node is not None:
+                        ilvl_val = ilvl_node.get(qn('w:val'))
+
+                # 2. 如果段落没有，再检查样式的 numPr
+                if numId_val is None:
+                    style_elem = para.style._element
+                    style_pPr = style_elem.find(qn('w:pPr'))
+                    if style_pPr is not None:
+                        style_numPr = style_pPr.find(qn('w:numPr'))
+                        if style_numPr is not None:
+                            numId_node = style_numPr.find(qn('w:numId'))
+                            ilvl_node = style_numPr.find(qn('w:ilvl'))
+                            if numId_node is not None:
+                                numId_val = numId_node.get(qn('w:val'))
+                            if ilvl_node is not None:
+                                ilvl_val = ilvl_node.get(qn('w:val'))
+
+                if not numId_val:
+                    continue
+
+                # 3. 追踪到 numbering.xml 中的 abstractNum
+                try:
+                    num_nodes = numbering_xml.xpath(f'.//w:num[@w:numId="{numId_val}"]/w:abstractNumId')
+                    if not num_nodes:
+                        continue
+                    abstractNumId_val = num_nodes[0].get(qn('w:val'))
+
+                    # 避免重复修改
+                    if (abstractNumId_val, ilvl_val) in fixed_abstract_nums:
+                        continue
+
+                    # 4. 找到对应的 lvl 节点
+                    lvl_nodes = numbering_xml.xpath(f'.//w:abstractNum[@w:abstractNumId="{abstractNumId_val}"]/w:lvl[@w:ilvl="{ilvl_val}"]')
+                    if not lvl_nodes:
+                        continue
+                    lvl_node = lvl_nodes[0]
+
+                    # 5. 获取或创建 rPr (运行属性)
+                    rPr = lvl_node.find(qn('w:rPr'))
+                    if rPr is None:
+                        rPr = OxmlElement('w:rPr')
+                        lvl_node.insert(0, rPr)  # 插入到最前面
+
+                    # 6. 强制设置字体为黑体，并清除主题字体干扰
+                    rFonts = rPr.find(qn('w:rFonts'))
+                    if rFonts is None:
+                        rFonts = OxmlElement('w:rFonts')
+                        rPr.append(rFonts)
+
+                    # 【关键修复】：清除主题字体绑定，否则 Word 会优先使用主题字体(宋体)
+                    for attr in ['asciiTheme', 'eastAsiaTheme', 'hAnsiTheme', 'cstheme']:
+                        if qn(f'w:{attr}') in rFonts.attrib:
+                            del rFonts.attrib[qn(f'w:{attr}')]
+
+                    # 设置具体字体
+                    rFonts.set(qn('w:ascii'), '黑体')
+                    rFonts.set(qn('w:eastAsia'), '黑体')
+                    rFonts.set(qn('w:hAnsi'), '黑体')
+                    rFonts.set(qn('w:cs'), '黑体')
+
+                    # 7. 确保加粗 (与正文黑体保持一致)
+                    b = rPr.find(qn('w:b'))
+                    if b is None:
+                        b = OxmlElement('w:b')
+                        rPr.append(b)
+                    b.set(qn('w:val'), '1')
+
+                    bCs = rPr.find(qn('w:bCs'))
+                    if bCs is None:
+                        bCs = OxmlElement('w:bCs')
+                        rPr.append(bCs)
+                    bCs.set(qn('w:val'), '1')
+
+                    fixed_abstract_nums.add((abstractNumId_val, ilvl_val))
+                    print(f"成功修复 abstractNumId={abstractNumId_val}, ilvl={ilvl_val} 的编号字体为黑体")
+
+                except Exception as e:
+                    print(f"修复编号字体时出错: {e}")
+                    continue
+
+        if len(fixed_abstract_nums) > 0:
+            self.report.add_fix("HEADING1_NUM_FONT", len(fixed_abstract_nums), "修复章标题自动编号字体为黑体", success=True)
 
 
 def auto_fix(doc_path: str, rules_path: str, output_path: str = None, 
