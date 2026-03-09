@@ -319,7 +319,7 @@ class DocxAutoFixer:
                 sectPr.append(pgNumType)
                 
                 # Zone 3 使用 STYLEREF 动态页眉
-                self._write_header_styleref(section.header)
+                self._write_header_styleref(section.header, "标题 1")
                 self._write_header(section.even_page_header, "北京大学硕士学位论文")
                 self._write_footer_page_num(section.footer)
                 self._write_footer_page_num(section.even_page_footer)
@@ -384,7 +384,7 @@ class DocxAutoFixer:
         run.font.name = 'Times New Roman'
         run.font.size = Pt(10.5)
 
-    def _write_header_styleref(self, header_obj):
+    def _write_header_styleref(self, header_obj, style_name):
         """写入页眉（STYLEREF动态域）"""
         from docx.enum.text import WD_ALIGN_PARAGRAPH
         from docx.oxml import OxmlElement
@@ -406,10 +406,10 @@ class DocxAutoFixer:
         fldChar1.set(qn('w:fldCharType'), 'begin')
         run._r.append(fldChar1)
         
-        # 域指令 - 使用 Heading 1 样式
+        # 域指令 - 使用 style_name 样式
         instrText = OxmlElement('w:instrText')
         instrText.set(qn('xml:space'), 'preserve')
-        instrText.text = ' STYLEREF "Heading 1" \\* MERGEFORMAT '
+        instrText.text = f' STYLEREF "{style_name}" \\* MERGEFORMAT '
         run._r.append(instrText)
         
         # 分隔符
